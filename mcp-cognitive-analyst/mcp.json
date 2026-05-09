@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "business-db": {
+      "command": "python",
+      "args": [
+        "business_mcp.py"
+      ],
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "DATABASE_URL": "${DATABASE_URL}",
+        "DEBUG": "false"
+      },
+      "disabled": false,
+      "alwaysAllow": []
+    },
+    "context-memory": {
+      "command": "python",
+      "args": [
+        "memory_mcp.py"
+      ],
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "MEMORY_DB_PATH": "${MEMORY_DB_PATH}",
+        "DEBUG": "false"
+      },
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}
