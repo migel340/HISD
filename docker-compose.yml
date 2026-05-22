@@ -63,14 +63,12 @@ services:
       - "${MEMORY_MCP_PORT:-8002}:8002"
     volumes:
       - .:/app
-      - memory_data:/app/data
+      - ./memory.db:/app/data/memory.db
     networks:
       - mcp-network
 
 volumes:
   postgres_data:
-    driver: local
-  memory_data:
     driver: local
 
 networks:

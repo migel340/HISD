@@ -1,0 +1,47 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "ollama-local/granite4.1:8b",
+  "provider": {
+    "ollama-local": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://127.0.0.1:11434/v1"
+      },
+      "models": {
+        "granite4.1:8b": {
+          "name": "granite4.1:8b",
+          "options": {
+            "think": false
+          }
+        }
+      }
+    }
+  },
+  "mcp": {
+    "business_db_mcp": {
+      "type": "local",
+      // Ściezka do zmiany 
+      "command": ["sh", "-lc", "cd /Users/spacedesk2/Desktop/HISD && docker compose up -d postgres >/dev/null && docker compose run --rm -T business-mcp python business_mcp.py"],
+      "enabled": true
+    },
+    "context_memory_mcp": {
+      "type": "local",
+      // Ściezka do zmiany 
+      "command": ["sh", "-lc", "cd /Users/spacedesk2/Desktop/HISD && docker compose up -d memory-mcp >/dev/null && docker compose run --rm -T memory-mcp python memory_mcp.py"],
+      "enabled": true
+    }
+  },
+  "agent": {
+    "analityk": {
+      "description": "Agent do obsługi logiki biznesowej z PostgreSQL i pamięci kontekstu z SQLite.",
+      "mode": "primary",
+      "prompt": "Jesteś inteligentnym systemem analitycznym. Twoim zadaniem jest obsługa zapytań użytkownika. Masz dostęp do narzędzi MCP: używaj narzędzi 'context_memory_mcp_*' do zapisu i odczytu historii konwersacji w SQLite, oraz narzędzi 'business_db_mcp_*' do pobierania aktualnych danych z biznesowej bazy PostgreSQL. Zawsze odczytaj kontekst przed odpowiedzią.",
+      "permission": {
+        "business_db_mcp_*": "allow",
+        "context_memory_mcp_*": "allow"
+      }
+    }
+  },
+  "default_agent": "analityk"
+}

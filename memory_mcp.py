@@ -10,7 +10,6 @@ Requires:
   - Environment variable: MEMORY_DB_PATH (defaults to ./memory.db)
 """
 
-import asyncio
 import os
 import sqlite3
 from typing import Any, Dict, List, Optional
@@ -332,16 +331,15 @@ def cleanup():
         _connection = None
 
 
-async def main():
+def main():
     """Start the Memory MCP server."""
     try:
-        await mcp.run(
-            transport='stdio',
-            debug=os.getenv("DEBUG", "false").lower() == "true"
+        mcp.run(
+            transport='stdio'
         )
     finally:
         cleanup()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

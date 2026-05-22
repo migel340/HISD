@@ -10,7 +10,6 @@ Requires:
   - Environment variables: DATABASE_URL or DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 """
 
-import asyncio
 import os
 from typing import Any, Dict, List, Optional
 from datetime import datetime
@@ -209,16 +208,17 @@ async def cleanup():
         _pool = None
 
 
-async def main():
+def main():
     """Start the Business MCP server."""
     try:
-        await mcp.run(
-            transport='stdio',
-            debug=os.getenv("DEBUG", "false").lower() == "true"
+        mcp.run(
+            transport='stdio'
         )
     finally:
-        await cleanup()
+        import asyncio
+
+        asyncio.run(cleanup())
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
