@@ -12,7 +12,7 @@ Requires:
 
 import os
 from typing import Any, Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 import asyncpg
 from dotenv import load_dotenv
@@ -128,7 +128,7 @@ async def get_schema(schema_name: str = "public") -> Dict[str, Any]:
             return {
                 "schema": schema_name,
                 "tables": schema_data,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
     except Exception as e:
         raise RuntimeError(f"Failed to retrieve schema: {str(e)}")
@@ -174,7 +174,7 @@ async def execute_query(query: str, params: Optional[List[Any]] = None) -> Dict[
     try:
         pool = await _get_pool()
         async with pool.acquire() as connection:
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             
             # Execute query with optional parameters
             if params:
@@ -182,7 +182,7 @@ async def execute_query(query: str, params: Optional[List[Any]] = None) -> Dict[
             else:
                 rows = await connection.fetch(query)
             
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             
             # Convert records to dictionaries
             result_rows = [dict(row) for row in rows]
@@ -227,7 +227,7 @@ async def execute_write(query: str, params: Optional[List[Any]] = None) -> Dict[
     try:
         pool = await _get_pool()
         async with pool.acquire() as connection:
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
 
             # If RETURNING is present, fetch returned rows; otherwise execute
             if 'RETURNING' in query_upper:
@@ -236,7 +236,7 @@ async def execute_write(query: str, params: Optional[List[Any]] = None) -> Dict[
                 else:
                     rows = await connection.fetch(query)
 
-                execution_time = (datetime.utcnow() - start_time).total_seconds()
+                execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
                 result_rows = [dict(r) for r in rows]
 
                 return {
@@ -252,7 +252,7 @@ async def execute_write(query: str, params: Optional[List[Any]] = None) -> Dict[
                 else:
                     command_tag = await connection.execute(query)
 
-                execution_time = (datetime.utcnow() - start_time).total_seconds()
+                execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
                 # Try to parse affected row count from command tag
                 parts = command_tag.split()
@@ -267,6 +267,120 @@ async def execute_write(query: str, params: Optional[List[Any]] = None) -> Dict[
                 }
     except Exception as e:
         raise RuntimeError(f"Write query execution failed: {str(e)}")
+
+@mcp.tool()
+async def alter_table(query: str) -> Dict[str, Any]:
+    """
+    Execute a safe ALTER TABLE operation.
+
+    Security rules:
+    - Only ALTER TABLE statements are allowed
+    - Forbids DROP, DELETE, UPDATE, INSERT, TRUNCATE, CREATE
+    - Encourages parameterized queries via `params`
+
+    Returns a dict with command results and timing.
+    """
+    # Basic safety checks
+    query_upper = query.strip().upper()
+
+    if not query_upper.startswith('ALTER TABLE'):
+        raise ValueError("Only ALTER TABLE statements are allowed for this operation")
+
+    forbidden_keywords = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'TRUNCATE', 'CREATE']
+    for keyword in forbidden_keywords:
+        if keyword in query_upper:
+            raise ValueError(f"Query cannot contain {keyword} operations")
+
+    try:
+        pool = await _get_pool()
+        async with pool.acquire() as connection:
+            start_time = datetime.now(timezone.utc)
+
+            command_tag = await connection.execute(query)
+
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+
+            return {
+                "command_tag": command_tag,
+                "execution_time": execution_time,
+            }
+            
+    except Exception as e:
+        raise RuntimeError(f"ALTER TABLE execution failed: {str(e)}")
+
+@mcp.tool()
+async def add_table(table_name: str, columns: List[Dict[str, str]]) -> Dict[str, Any]:
+    """
+    Create a new table with specified columns.
+
+    Args:
+        table_name: Name of the new table
+        columns: List of column definitions, each as dict with 'name' and 'type'
+
+    Returns a dict with command results and timing.
+    """
+    # Basic safety checks
+    if not table_name.isidentifier():
+        raise ValueError("Invalid table name")
+
+    for col in columns:
+        if 'name' not in col or 'type' not in col:
+            raise ValueError("Each column definition must have 'name' and 'type'")
+        if not col['name'].isidentifier():
+            raise ValueError(f"Invalid column name: {col['name']}")
+
+    # Build CREATE TABLE query
+    column_defs = ", ".join(f"{col['name']} {col['type']}" for col in columns)
+    query = f"CREATE TABLE {table_name} ({column_defs})"
+
+    try:
+        pool = await _get_pool()
+        async with pool.acquire() as connection:
+            start_time = datetime.now(timezone.utc)
+
+            command_tag = await connection.execute(query)
+
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+
+            return {
+                "command_tag": command_tag,
+                "execution_time": execution_time,
+            }
+            
+    except Exception as e:
+        raise RuntimeError(f"Table creation failed: {str(e)}")
+
+@mcp.tool()
+async def truncate_table(table_name: str) -> Dict[str, Any]:
+    """
+    Truncate a table, removing all rows but keeping the structure.
+
+    Args:
+        table_name: Name of the table to truncate
+    Returns a dict with command results and timing.
+    """
+    # Basic safety checks
+    if not table_name.isidentifier():
+        raise ValueError("Invalid table name")
+
+    query = f"TRUNCATE TABLE {table_name}"
+
+    try:
+        pool = await _get_pool()
+        async with pool.acquire() as connection:
+            start_time = datetime.now(timezone.utc)
+
+            command_tag = await connection.execute(query)
+
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+
+            return {
+                "command_tag": command_tag,
+                "execution_time": execution_time,
+            }
+            
+    except Exception as e:
+        raise RuntimeError(f"Table truncation failed: {str(e)}")
 
 @mcp.tool()
 async def execute_destructive(query: str, params: Optional[List[Any]] = None) -> Dict[str, Any]:
