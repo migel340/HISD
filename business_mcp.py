@@ -268,6 +268,81 @@ async def execute_write(query: str, params: Optional[List[Any]] = None) -> Dict[
     except Exception as e:
         raise RuntimeError(f"Write query execution failed: {str(e)}")
 
+@mcp.tool()
+async def execute_destructive(query: str, params: Optional[List[Any]] = None) -> Dict[str, Any]:
+    """
+    Execute a destructive database operation (DELETE or DROP).
+
+    NEVER USE THIS TOOL WITHOUT USER CONFIRMATION.
+    Before using this tool the assistant must tell the user exactly what SQL query will be executed
+    and explicitly ask the user "Are you sure you want to execute this destructive operation?".
+    Only execute if the user replies with a clear "yes" or "confirm". 
+    If the user replies with anything else, do not execute and respond with "Operation cancelled by user."
+    
+    Security rules:
+    - Only DELETE and DROP statements are allowed.
+    - Prevents CREATE, ALTER, INSERT, UPDATE, TRUNCATE operations.
+
+    Returns a dict with command results and timing. If the query uses
+    `RETURNING`, returned rows are included.
+    """
+    query_upper = query.strip().upper()
+
+    if not (query_upper.startswith('DELETE') or query_upper.startswith('DROP')):
+        raise ValueError("Only DELETE and DROP statements are allowed for destructive operations")
+
+    forbidden_keywords = ['INSERT', 'UPDATE', 'ALTER', 'CREATE', 'TRUNCATE']
+    for keyword in forbidden_keywords:
+        if keyword in query_upper:
+            raise ValueError(f"Query cannot contain {keyword} operations")
+
+    try:
+        pool = await _get_pool()
+        async with pool.acquire() as connection:
+            start_time = datetime.utcnow()
+
+            # If RETURNING is present, fetch returned rows; otherwise execute
+            if 'RETURNING' in query_upper and query_upper.startswith('DELETE'):
+                if params:
+                    rows = await connection.fetch(query, *params)
+                else:
+                    rows = await connection.fetch(query)
+
+                execution_time = (datetime.utcnow() - start_time).total_seconds()
+                result_rows = [dict(r) for r in rows]
+
+                return {
+                    "warning": "Destructive operation executed",
+                    "rows": result_rows,
+                    "row_count": len(result_rows),
+                    "columns": list(rows[0].keys()) if rows else [],
+                    "execution_time": execution_time,
+                }
+            else:
+                # DROP or DELETE without RETURNING
+                if params:
+                    command_tag = await connection.execute(query, *params)
+                else:
+                    command_tag = await connection.execute(query)
+
+                execution_time = (datetime.utcnow() - start_time).total_seconds()
+
+                # Try to parse affected row count from command tag
+                parts = command_tag.split()
+                affected: Optional[int] = None
+                if parts and parts[-1].isdigit():
+                    affected = int(parts[-1])
+
+                return {
+                    "warning": "Destructive operation executed",
+                    "command_tag": command_tag,
+                    "row_count": affected if affected is not None else 0,
+                    "execution_time": execution_time,
+                }
+    except Exception as e:
+        raise RuntimeError(f"Destructive query execution failed: {str(e)}")
+
+
 async def cleanup():
     """Close database connection pool on shutdown."""
     global _pool
