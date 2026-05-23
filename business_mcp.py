@@ -200,6 +200,74 @@ async def execute_query(query: str, params: Optional[List[Any]] = None) -> Dict[
         raise RuntimeError(f"Query execution failed: {str(e)}")
 
 
+@mcp.tool()
+async def execute_write(query: str, params: Optional[List[Any]] = None) -> Dict[str, Any]:
+    """
+    Execute a safe write operation (INSERT or UPDATE).
+
+    Security rules:
+    - Only INSERT and UPDATE statements are allowed (optionally with RETURNING)
+    - Forbids DROP, DELETE, ALTER, TRUNCATE, CREATE
+    - Encourages parameterized queries via `params`
+
+    Returns a dict with command results and timing. If the query uses
+    `RETURNING`, returned rows are included.
+    """
+    # Basic safety checks
+    query_upper = query.strip().upper()
+
+    if not (query_upper.startswith('INSERT') or query_upper.startswith('UPDATE')):
+        raise ValueError("Only INSERT and UPDATE statements are allowed for write operations")
+
+    forbidden_keywords = ['DROP', 'DELETE', 'ALTER', 'TRUNCATE', 'CREATE']
+    for keyword in forbidden_keywords:
+        if keyword in query_upper:
+            raise ValueError(f"Query cannot contain {keyword} operations")
+
+    try:
+        pool = await _get_pool()
+        async with pool.acquire() as connection:
+            start_time = datetime.utcnow()
+
+            # If RETURNING is present, fetch returned rows; otherwise execute
+            if 'RETURNING' in query_upper:
+                if params:
+                    rows = await connection.fetch(query, *params)
+                else:
+                    rows = await connection.fetch(query)
+
+                execution_time = (datetime.utcnow() - start_time).total_seconds()
+                result_rows = [dict(r) for r in rows]
+
+                return {
+                    "rows": result_rows,
+                    "row_count": len(result_rows),
+                    "columns": list(rows[0].keys()) if rows else [],
+                    "execution_time": execution_time,
+                }
+            else:
+                # execute returns a command tag like 'INSERT 0 1' or 'UPDATE 3'
+                if params:
+                    command_tag = await connection.execute(query, *params)
+                else:
+                    command_tag = await connection.execute(query)
+
+                execution_time = (datetime.utcnow() - start_time).total_seconds()
+
+                # Try to parse affected row count from command tag
+                parts = command_tag.split()
+                affected: Optional[int] = None
+                if parts and parts[-1].isdigit():
+                    affected = int(parts[-1])
+
+                return {
+                    "command_tag": command_tag,
+                    "row_count": affected if affected is not None else 0,
+                    "execution_time": execution_time,
+                }
+    except Exception as e:
+        raise RuntimeError(f"Write query execution failed: {str(e)}")
+
 async def cleanup():
     """Close database connection pool on shutdown."""
     global _pool
