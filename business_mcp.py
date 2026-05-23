@@ -73,7 +73,7 @@ async def get_schema(schema_name: str = "public") -> Dict[str, Any]:
     Retrieve the database schema: tables and their columns.
     
     Provides a complete overview of the specified schema, including table names,
-    column names, data types, and null constraints.
+    column names, data types, null constraints and foreign key relationships.
     
     Args:
         schema_name: The schema to inspect (default: 'public')
@@ -84,7 +84,12 @@ async def get_schema(schema_name: str = "public") -> Dict[str, Any]:
                 "schema": str,
                 "tables": {
                     "table_name": [
-                        {"name": "col_name", "type": "type", "nullable": bool},
+                        {
+                        "name": "col_name", 
+                        "type": "type", 
+                        "nullable": bool, 
+                        "foreign_keys": {"table": "other_table", "column": "other_column"} or None
+                        },
                         ...
                     ],
                     ...
@@ -112,27 +117,56 @@ async def get_schema(schema_name: str = "public") -> Dict[str, Any]:
             """
             rows = await connection.fetch(query, schema_name)
             
+            fk_query = """
+            SELECT
+                kcu.table_name,
+                kcu.column_name,
+                ccu.table_name AS foreign_table,
+                ccu.column_name AS foreign_column
+            FROM information_schema.key_column_usage kcu
+            JOIN information_schema.table_constraints tc 
+                ON kcu.constraint_name = tc.constraint_name
+                AND tc.table_schema = kcu.table_schema
+            JOIN information_schema.constraint_column_usage ccu 
+                ON ccu.constraint_name = tc.constraint_name 
+                AND ccu.table_schema = tc.table_schema
+            WHERE tc.constraint_type = 'FOREIGN KEY' 
+              AND tc.table_schema = $1
+            """
+            fk_rows = await connection.fetch(fk_query, schema_name)
+
+            fks_map = {}
+            for row in fk_rows:
+                fks_map[(row['table_name'], row['column_name'])] = {
+                    "table": row['foreign_table'],
+                    "column": row['foreign_column']
+                }
+
             # Organize results by table
             schema_data: Dict[str, List[Dict[str, Any]]] = {}
             for row in rows:
                 table_name = row['table_name']
+                column_name = row['column_name']
                 if table_name not in schema_data:
                     schema_data[table_name] = []
                 
-                schema_data[table_name].append({
-                    "name": row['column_name'],
+                column_info = {
+                    "name": column_name,
                     "type": row['data_type'],
-                    "nullable": row['is_nullable'] == 'YES'
-                })
+                    "nullable": row['is_nullable'] == 'YES'}
+
+                if(table_name, column_name in fks_map):
+                    column_info["foreign_keys"] = fks_map[(table_name, column_name)]
+
+                schema_data[table_name].append(column_info)
             
             return {
                 "schema": schema_name,
                 "tables": schema_data,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.utcnow().isoformat()
             }
     except Exception as e:
         raise RuntimeError(f"Failed to retrieve schema: {str(e)}")
-
 
 @mcp.tool()
 async def execute_query(query: str, params: Optional[List[Any]] = None) -> Dict[str, Any]:
