@@ -168,6 +168,7 @@ async def save_context(topic: str, content: str, ttl_hours: int = 24) -> Dict[st
                 "expires_at": row['expires_at'],
                 "message": "Context already exists"
             }
+        raise RuntimeError("Context already exists but could not be retrieved")
     except Exception as e:
         raise RuntimeError(f"Failed to save context: {str(e)}")
 

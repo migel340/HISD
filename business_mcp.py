@@ -155,7 +155,7 @@ async def get_schema(schema_name: str = "public") -> Dict[str, Any]:
                     "type": row['data_type'],
                     "nullable": row['is_nullable'] == 'YES'}
 
-                if(table_name, column_name in fks_map):
+                if (table_name, column_name) in fks_map:
                     column_info["foreign_keys"] = fks_map[(table_name, column_name)]
 
                 schema_data[table_name].append(column_info)
