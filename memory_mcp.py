@@ -13,7 +13,7 @@ Requires:
 import os
 import sqlite3
 from typing import Any, Dict, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 from fastmcp import FastMCP
@@ -135,7 +135,7 @@ async def save_context(topic: str, content: str, ttl_hours: int = 24) -> Dict[st
         cursor = conn.cursor()
         
         # Calculate expiration time
-        expires_at = datetime.utcnow() + timedelta(hours=ttl_hours)
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=ttl_hours)
         
         # Insert or ignore (prevents duplicates)
         cursor.execute("""
@@ -213,7 +213,7 @@ async def retrieve_context(topic: str) -> Dict[str, Any]:
         cursor = conn.cursor()
         
         # Retrieve non-expired contexts
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         cursor.execute("""
             SELECT id, content, created_at, expires_at
             FROM context
@@ -256,7 +256,7 @@ async def cleanup_expired_contexts() -> Dict[str, Any]:
         conn = _get_connection()
         cursor = conn.cursor()
         
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         
         # Delete expired records
         cursor.execute("DELETE FROM context WHERE expires_at <= ?", (now,))
@@ -304,7 +304,7 @@ async def list_topics() -> Dict[str, Any]:
         conn = _get_connection()
         cursor = conn.cursor()
         
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         cursor.execute("""
             SELECT topic, COUNT(*) as context_count
             FROM context

@@ -447,7 +447,7 @@ async def execute_destructive(query: str, params: Optional[List[Any]] = None) ->
     try:
         pool = await _get_pool()
         async with pool.acquire() as connection:
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
 
             # If RETURNING is present, fetch returned rows; otherwise execute
             if 'RETURNING' in query_upper and query_upper.startswith('DELETE'):
@@ -456,7 +456,7 @@ async def execute_destructive(query: str, params: Optional[List[Any]] = None) ->
                 else:
                     rows = await connection.fetch(query)
 
-                execution_time = (datetime.utcnow() - start_time).total_seconds()
+                execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
                 result_rows = [dict(r) for r in rows]
 
                 return {
@@ -473,7 +473,7 @@ async def execute_destructive(query: str, params: Optional[List[Any]] = None) ->
                 else:
                     command_tag = await connection.execute(query)
 
-                execution_time = (datetime.utcnow() - start_time).total_seconds()
+                execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
                 # Try to parse affected row count from command tag
                 parts = command_tag.split()
