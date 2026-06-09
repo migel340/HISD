@@ -55,3 +55,5 @@ logs/
 .coverage
 htmlcov/
 drive-download-20260510T202012Z-3-001
+memory.db
+backup.sql

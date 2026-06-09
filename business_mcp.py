@@ -306,7 +306,12 @@ async def execute_write(query: str, params: Optional[List[Any]] = None) -> Dict[
 async def alter_table(query: str) -> Dict[str, Any]:
     """
     Execute a safe ALTER TABLE operation.
-
+    NEVER USE THIS TOOL WITHOUT USER CONFIRMATION.
+    Before using this tool the assistant must tell the user exactly what SQL query will be executed
+    and explicitly ask the user "Are you sure you want to execute this destructive operation?".
+    Only execute if the user replies with a clear "yes" or "confirm". 
+    If the user replies with anything else, do not execute and respond with "Operation cancelled by user."
+    
     Security rules:
     - Only ALTER TABLE statements are allowed
     - Forbids DROP, DELETE, UPDATE, INSERT, TRUNCATE, CREATE
@@ -388,7 +393,12 @@ async def add_table(table_name: str, columns: List[Dict[str, str]]) -> Dict[str,
 async def truncate_table(table_name: str) -> Dict[str, Any]:
     """
     Truncate a table, removing all rows but keeping the structure.
-
+    NEVER USE THIS TOOL WITHOUT USER CONFIRMATION.
+    Before using this tool the assistant must tell the user exactly what SQL query will be executed
+    and explicitly ask the user "Are you sure you want to execute this destructive operation?".
+    Only execute if the user replies with a clear "yes" or "confirm". 
+    If the user replies with anything else, do not execute and respond with "Operation cancelled by user."
+    
     Args:
         table_name: Name of the table to truncate
     Returns a dict with command results and timing.
