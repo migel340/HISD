@@ -21,12 +21,12 @@
   "mcp": {
     "business_db_mcp": {
       "type": "local",
-      "command": ["sh", "-lc", "docker compose up -d postgres >/dev/null && docker compose run --rm -T business-mcp python business_mcp.py"],
+      "command": ["sh", "-lc", "docker compose run --rm -T business-mcp python business_mcp.py"],
       "enabled": true
     },
     "context_memory_mcp": {
       "type": "local",
-      "command": ["sh", "-lc", "docker compose up -d memory-mcp >/dev/null && docker compose run --rm -T memory-mcp python memory_mcp.py"],
+      "command": ["sh", "-lc", "docker compose run --rm -T memory-mcp python memory_mcp.py"],
       "enabled": true
     }
   },
