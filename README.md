@@ -7,7 +7,7 @@ Thanks to the business_mcp, which is responsible for access to the database Open
   <li>execute DROP, DELETE, ALTER, TRUNCATE queries after an appropriate confirmation</li>
 </ul>
 DROP, DELETE, ALTER and TRUNCATE queries where created as a proof of concept and wouldn't be added in a comercial version.
-
+<br></br>
 The memory_mcp remebers:
 <ul>
   <li>users' preferences</li>
