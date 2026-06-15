@@ -36,3 +36,17 @@ ON CONFLICT DO NOTHING;
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_customers_email ON public.customers(email);
 CREATE INDEX IF NOT EXISTS idx_transactions_customer_id ON public.transactions(customer_id);
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'basic_user') THEN
+        CREATE USER basic_user WITH PASSWORD 'haslo123';
+    END IF;
+END
+$$;
+
+GRANT CONNECT ON DATABASE business_db TO basic_user;
+GRANT USAGE ON SCHEMA public TO basic_user;
+
+GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA public TO basic_user;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO basic_user;
