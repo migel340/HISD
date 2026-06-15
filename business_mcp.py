@@ -500,6 +500,46 @@ async def execute_destructive(query: str, params: Optional[List[Any]] = None) ->
     except Exception as e:
         raise RuntimeError(f"Destructive query execution failed: {str(e)}")
 
+@mcp.tool()
+async def get_current_user_privilages() -> Dict[str, Any]:
+    """
+    Retrieve the database privileges for the current logged-in user.
+    The assistant must use this tool at the begining of the session to check what permissions it has.
+    """
+    try:
+        pool = await _get_pool()
+        async with pool.acquire() as connection:
+            query = """
+                SELECT current_user as username, 
+                       rolsuper as is_superuser,
+                       rolcreatedb as can_create_db
+                FROM pg_roles 
+                WHERE rolname = current_user
+            """
+            user_info = await connection.fetchrow(query)
+            
+            priv_query = """
+                SELECT table_name, privilege_type
+                FROM information_schema.role_table_grants
+                WHERE grantee = current_user AND table_schema = 'public'
+            """
+            grants = await connection.fetch(priv_query)
+
+            table_privileges = {}
+            for grant in grants:
+                t_name = grant['table_name']
+                p_type = grant['privilege_type']
+                if t_name not in table_privileges:
+                    table_privileges[t_name] = []
+                table_privileges[t_name].append(p_type)
+
+            return {
+                "user_info": dict(user_info) if user_info else {"username": "unknown"},
+                "table_privileges": table_privileges,
+                "message": "Please present these privileges clearly to the user."
+            }
+    except Exception as e:
+        raise RuntimeError(f"Failed to retrieve user privileges: {str(e)}")
 
 async def cleanup():
     """Close database connection pool on shutdown."""
