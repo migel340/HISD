@@ -56,25 +56,25 @@ Here are examples of what you can ask the **OpenCode** agent to do using the imp
 
 **Understanding the structure and querying data (Read-Only):**
 * *"Describe the database structure to me. What tables are there and how are they related?"* (Triggers `get_schema`)
-* *"What columns does the `products` table contain, and can the `description` field accept NULL values?"* (Triggers `get_schema`)
-* *"Fetch the 5 most recent orders from the orders table that have a 'pending' status."* (Triggers `execute_query`)
-* *"Calculate the average order value (`total_price` column) from all orders completed last month."* (Triggers `execute_query` with an aggregate function)
-* *"Show me the first and last names of all customers from the `users` table who bought the product named 'Laptop X Pro' (join with the `orders` table)."* (Triggers `execute_query` using a `JOIN`)
+* *"What columns does the `customers` table contain, and can the `email` field accept NULL values?"* (Triggers `get_schema`)
+* *"Fetch all transactions from the `transactions` table that have an amount grater than 100."* (Triggers `execute_query`)
+* *"Calculate the total amount spent by each customer using the `transactions` table."* (Triggers `execute_query` with an aggregate function)
+* *"Show me the names of all customers along with the amount of their transactions by joining the `customers` and `transactions` tables."* (Triggers `execute_query` using a `JOIN`)
 
 **Inserting and updating data (Write):**
-* *"Add a new user to the users table with the name John and email john@example.com."* (Triggers `execute_write` - `INSERT`)
-* *"Update the status of all orders from 'processing' to 'shipped' for orders handled by DHL courier."* (Triggers `execute_write` - `UPDATE`)
-* *"Increase the price of all products in the 'Accessories' category (`products` table) by 10%."* (Triggers `execute_write` - `UPDATE`)
+* *"Add a new customer to the `customers` table with the name Alice Brown and email alice@example.com."* (Triggers `execute_write` - `INSERT`)
+* *"Update the email of the customer named John Doe to john.doe@newdomain.com."* (Triggers `execute_write` - `UPDATE`)
+* *"Increase the amount of all transactions below 100 by 10% in the `transactions` table."* (Triggers `execute_write` - `UPDATE`)
 
 **Managing database structure (DDL):**
-* *"Create a new table named `product_reviews`. Add the following columns: `id` (integer), `product_id` (integer), `rating` (integer), and `comment` (text)."* (Triggers `add_table`)
-* *"Add a new `discount_code` column of type VARCHAR to the existing `orders` table."* (The model will prepare an `alter_table` query and **ask for your confirmation** before executing).
+* *"Create a new table named `support_tickets`. Add the following columns: `id` (integer), `customer_id` (integer), `issue` (text), and `status` (varchar)."* (Triggers `add_table`)
+* *"Add a new `phone_number` column of type VARCHAR to the existing `customers` table"* (The model will prepare an `alter_table` query and **ask for your confirmation** before executing).
 
 **Destructive operations (Always require your explicit consent!):**
-* *"Delete all entries from the logs table that are older than 30 days."* (The model will prepare an `execute_destructive` query using `DELETE`, show you the SQL code, and ask for confirmation).
-* *"Delete the user account from the `users` table that has the email address 'spam@example.com'."* (Triggers `execute_destructive` using `DELETE` after your approval).
-* *"Completely clear the temporary_data table."* (Triggers `truncate_table` after your approval - a very fast row deletion without dropping the table).
-* *"Completely drop the `old_analytics_2023` table from the database."* (Triggers `execute_destructive` using `DROP TABLE` after your strict approval).
+* *"Delete all entries from the `transactions` table where the amount is less than 80."* (The model will prepare an `execute_destructive` query using `DELETE`, show you the SQL code, and ask for confirmation).
+* *"Delete the customer from the `customers` table whose email is 'jane@example.com'."* (Triggers `execute_destructive` using `DELETE` after your approval).
+* *"Completely clear the `transactions` table"* (Triggers `truncate_table` after your approval - a very fast row deletion without dropping the table).
+* *"Completely drop the newly created `support_tickets` table from the database."* (Triggers `execute_destructive` using `DROP TABLE` after your strict approval).
 
 ### 2. Contextual Memory (Memory MCP)
 
