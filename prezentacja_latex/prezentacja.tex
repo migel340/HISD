@@ -1,0 +1,1291 @@
+\documentclass[9pt,aspectratio=169]{beamer}
+
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{tcolorbox}
+% table option enables \rowcolor for tables
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+\tcbuselibrary{skins}
+
+% ---------- Kolory ----------
+\definecolor{primarypurple}{RGB}{79,70,229}
+\definecolor{accentgreen}{RGB}{16,163,127}
+\definecolor{accentorange}{RGB}{217,119,6}
+\definecolor{darknavy}{RGB}{30,41,59}
+\definecolor{lightgray}{RGB}{246,247,250}
+\definecolor{midgray}{RGB}{100,116,139}
+
+\usetheme{default}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{normal text}{fg=darknavy}
+\setbeamercolor{frametitle}{fg=darknavy,bg=white}
+\setbeamerfont{frametitle}{series=\bfseries,size=\Large}
+\setbeamercolor{title}{fg=white,bg=primarypurple}
+\setbeamercolor{section in head/foot}{fg=midgray}
+\setbeamercolor{author in head/foot}{fg=midgray}
+\setbeamercolor{date in head/foot}{fg=midgray}
+\setbeamercolor{itemize item}{fg=primarypurple}
+\setbeamercolor{itemize subitem}{fg=accentgreen}
+\setbeamertemplate{itemize item}{\textbullet}
+
+% Pasek przed tytułem slajdu (jak w oryginale: niebieska kreska + tytuł)
+\setbeamertemplate{frametitle}{%
+  \vspace{4pt}
+  \hbox{%
+    \raisebox{-2pt}{\textcolor{primarypurple}{\rule{3pt}{22pt}}}\hspace{8pt}%
+    \usebeamerfont{frametitle}\insertframetitle
+  }
+  \vspace{2pt}
+}
+
+% Stopka: sekcja po lewej, numer slajdu po prawej ("Slajd N z 60")
+\newcommand{\sekcjaaktualna}{}
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.6\paperwidth,ht=3ex,dp=1.5ex,leftskip=.35cm]{section in head/foot}%
+    \usebeamerfont{section in head/foot}\footnotesize \sekcjaaktualna
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.4\paperwidth,ht=3ex,dp=1.5ex,rightskip=.35cm,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}\footnotesize Slajd \insertframenumber{} z 60
+  \end{beamercolorbox}}%
+}
+
+\newcommand{\ustawsekcje}[1]{\renewcommand{\sekcjaaktualna}{#1}}
+
+% ---------- Boxy informacyjne (karty) ----------
+\newtcolorbox{infobox}[2][]{
+  colback=lightgray, colframe=primarypurple, boxrule=0pt, leftrule=2.4pt,
+  arc=1.5mm, boxsep=4pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries, title=#2, #1
+}
+\newtcolorbox{infoboxgreen}[2][]{
+  colback=lightgray, colframe=accentgreen, boxrule=0pt, leftrule=2.4pt,
+  arc=1.5mm, boxsep=4pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries, title=#2, #1
+}
+\newtcolorbox{infoboxorange}[2][]{
+  colback=lightgray, colframe=accentorange, boxrule=0pt, leftrule=2.4pt,
+  arc=1.5mm, boxsep=4pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\bfseries, title=#2, #1
+}
+\newtcolorbox{cardpurple}[1][]{
+  colback=white, colframe=primarypurple, boxrule=0pt, top=2.4pt,
+  arc=0.8mm, boxsep=4pt, left=8pt, right=8pt, bottom=6pt, #1
+}
+\newtcolorbox{cardgreen}[1][]{
+  colback=white, colframe=accentgreen, boxrule=0pt, top=2.4pt,
+  arc=0.8mm, boxsep=4pt, left=8pt, right=8pt, bottom=6pt, #1
+}
+\newtcolorbox{cardorange}[1][]{
+  colback=white, colframe=accentorange, boxrule=0pt, top=2.4pt,
+  arc=0.8mm, boxsep=4pt, left=8pt, right=8pt, bottom=6pt, #1
+}
+\newtcolorbox{cardhi}{
+  colback=lightgray, colframe=primarypurple, boxrule=1pt,
+  arc=0.8mm, boxsep=4pt, left=8pt, right=8pt, bottom=6pt
+}
+
+\title{Automating Aggregation Strategy Selection in Federated Learning}
+\author{}
+\date{}
+
+\begin{document}
+
+% ============================================================
+\begin{frame}[plain]
+\begin{center}
+\vspace{0.4cm}
+{\small\bfseries\textcolor{primarypurple}{SEMINARIUM BADAWCZE}}\\[10pt]
+{\Large\bfseries\textcolor{darknavy}{Automating Aggregation Strategy\\ Selection in Federated Learning}}\\[14pt]
+{\footnotesize\textcolor{midgray}{Niniejsza prezentacja została wykonana na podstawie artykułu\\
+\textbf{„Automating Aggregation Strategy Selection in Federated Learning”}\\
+przez Dian S. Y. Pang, Endrias Y. Ergetu, Eric Topham, Ahmed E. Fetit\\
+przez [Nazwisko wykonawcy prezentacji].}}\\[14pt]
+{\footnotesize\textcolor{midgray}{Lipiec 2026 \quad$\vert$\quad Imperial College London / OctaiPipe}}
+\end{center}
+\end{frame}
+
+% ============================================================
+\ustawsekcje{Sekcja 1: Przegląd literatury powiązanej}
+\section{Przegląd literatury powiązanej}
+
+\begin{frame}{Przegląd literatury: Wprowadzenie do FL}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\textbf{Istota Uczenia Federacyjnego (FL)}\\[4pt]
+Uczenie federacyjne zrewolucjonizowało podejście do trenowania modeli uczenia maszynowego poprzez porzucenie tradycyjnego paradygmatu centralizacji danych.\\[6pt]
+Zamiast przesyłać poufne dane lokalne na serwer centralny, klienci (np. urządzenia mobilne, serwery szpitalne) trenują modele lokalnie i wymieniają jedynie parametry (wagi lub gradienty).\\[8pt]
+\begin{infobox}{Główna korzyść: Prywatność}
+Dane surowe nigdy nie opuszczają lokalnych urządzeń brzegowych, co jest kluczowe w medycynie i finansach.
+\end{infobox}
+\end{column}
+\begin{column}{0.45\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.85, every node/.style={font=\tiny}]
+\node[draw, rounded corners, fill=lightgray] (server) at (0,3) {Serwer / Model globalny};
+\node[draw, rounded corners] (c1) at (-2.2,0) {Klient 1};
+\node[draw, rounded corners] (c2) at (0,0) {Klient 2};
+\node[draw, rounded corners] (c3) at (2.2,0) {Klient N};
+\draw[-{Latex}, primarypurple] (c1) -- node[left]{$w_1$} (server);
+\draw[-{Latex}, primarypurple] (c2) -- node[right]{$w_2$} (server);
+\draw[-{Latex}, primarypurple] (c3) -- node[right]{$w_n$} (server);
+\draw[-{Latex}, accentgreen] (server) to[bend right=40] node[below]{$w'$} (c1);
+\end{tikzpicture}
+\\[4pt]
+\footnotesize Krok 1: Inicjalizacja $\to$ Krok 2: Trening lokalny $\to$ Krok 3: Agregacja globalna
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Klasyczny FedAvg}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Algorytm McMahan et al. (2017)}\\[4pt]
+U podstaw uczenia federacyjnego leży algorytm \textbf{Federated Averaging (FedAvg)}. Agreguje on lokalne wagi modeli za pomocą średniej ważonej wielkością lokalnych zbiorów danych.
+\[
+w_{t+1} = \sum_{k=1}^{K} \frac{n_k}{n} w_{t+1}^k
+\]
+{\footnotesize Gdzie $n_k$ to liczba próbek klienta, a $n$ to całkowita liczba próbek we wszystkich węzłach.}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Ograniczenia FedAvg}
+\begin{itemize}\footnotesize
+\item Zakłada, że dane klientów są niezależne i tożsamo rozłożone (IID).
+\item W warunkach silnej heterogeniczności (non-IID) wykazuje wolną zbieżność.
+\item Wymaga ciągłej, kosztownej komunikacji sieciowej.
+\item Podatny na destabilizację przez klientów z zaburzonymi rozkładami.
+\end{itemize}
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Problem Non-IID}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\textbf{Heterogeniczność statystyczna danych}\\[4pt]
+W rzeczywistych wdrożeniach urządzenia klienckie generują dane w skrajnie różnych środowiskach (np. różne nawyki użytkowników, specyfika sensorów brzegowych).\\[6pt]
+Prowadzi to do zjawiska \textbf{non-IID}, czyli naruszenia założenia o tożsamości i niezależności rozkładów prawdopodobieństwa danych lokalnych.
+\begin{infoboxorange}{Konsekwencja badawcza}
+Lokalne aktualizacje gradientów stają się obciążonymi estymatorami globalnego gradientu optymalizacyjnego, drastycznie spowalniając zbieżność sieci.
+\end{infoboxorange}
+\end{column}
+\begin{column}{0.45\textwidth}
+\centering\footnotesize
+Statistical Heterogeneity obejmuje: Non-IID Data, Information Quality \& Quantity, Fairness Issues, Massively Distributed Data, Inconsistent/fake/not-valid data.
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Zjawisko Client Drift}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Przeuczenie do minimów lokalnych}\\[4pt]
+Podczas uczenia lokalnego klienci optymalizują model względem własnych funkcji kosztu $F_k(w)$.\\[6pt]
+Przy danych non-IID minima lokalne poszczególnych klientów są od siebie znacznie oddalone. Model optymalizowany u klienta oddala się od globalnego optimum (\textbf{dryf klienta}).\\[6pt]
+Uśrednienie tak rozbieżnych modeli w FedAvg drastycznie obniża ostateczną dokładność.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Mechanizm dryfu}
+\textbf{Krok 1:} Klient wykonuje wiele epok lokalnych, dopasowując się silnie do lokalnego zaburzonego zbioru.\\[3pt]
+\textbf{Krok 2:} Lokalne gradienty wskazują przeciwne kierunki.\\[3pt]
+\textbf{Krok 3:} Średnia z tych wektorów nie odzwierciedla prawdziwego optimum globalnego.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Algorytm SCAFFOLD}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Zastosowanie zmiennych kontrolnych}\\[4pt]
+Karimireddy et al. (2020) zaproponowali algorytm \textbf{SCAFFOLD} (Stochastic Controlled Averaging for Federated Learning).\\[6pt]
+Wprowadza on tzw. \textbf{zmienne kontrolne (control variates)}, które estymują kierunek dryfu dla każdego klienta i korygują lokalne kroki gradientowe.
+\[
+g = \nabla F_i(y) - c_i + c
+\]
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Zalety i wady SCAFFOLD}
+\textbf{Zalety:} Teoretycznie odporny na dowolny poziom heterogeniczności danych; gwarantuje szybszą zbieżność.\\[4pt]
+\textbf{Wady:} Wymaga podwojenia kosztów komunikacyjnych (przesyłanie dodatkowych wektorów stanu zmiennych kontrolnych) oraz zwiększa zużycie pamięci klientów.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Algorytm FedProx}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Człon proksymalny w optymalizacji}\\[4pt]
+Zaproponowany przez Li et al. (2020), \textbf{FedProx} rozwiązuje problem dryfu poprzez dodanie do lokalnej funkcji kosztu kary kwadratowej za zbytnie oddalenie się od modelu globalnego:
+\[
+\min_{w} h_k(w) = F_k(w) + \frac{\mu}{2}\lVert w - w_t \rVert^2
+\]
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Znaczenie hiperparametru $\mu$}
+Współczynnik $\mu$ kontroluje siłę powiązania modelu lokalnego z globalnym. Służy jako mechanizm regulacji odporności systemu na skośność danych.\\[6pt]
+\textbf{Problem:} Ręczny wybór optymalnego $\mu$ jest niezwykle trudny i wymaga kosztownych prób, co motywuje potrzebę automatyzacji opisaną w badanym artykule.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Agregacja odporna}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Zagrożenia ze strony złośliwych węzłów}\\[4pt]
+W rozproszonych środowiskach FL niektórzy klienci mogą celowo zatruwać dane (\textbf{label poisoning}) lub wysyłać zniekształcone gradienty w celu przejęcia/zniszczenia modelu globalnego.\\[6pt]
+Klasyczny algorytm FedAvg jest skrajnie podatny nawet na jednego złośliwego klienta o dużym wolumenie danych.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Rozwiązania z zakresu Robust Aggregation}
+\begin{itemize}\footnotesize
+\item \textbf{FedMedian:} Oblicza medianę współrzędna po współrzędnej zamiast średniej, odrzucając wartości skrajne.
+\item \textbf{FedTrimmedAvg:} Odrzuca określony procent skrajnych aktualizacji z obu końców spektrum przed uśrednieniem.
+\item \textbf{Krum / Multi-Krum:} Wybiera jedną aktualizację najbardziej spójną z otoczeniem euklidesowym.
+\end{itemize}
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Taksonomia skośności}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\begin{cardpurple}
+{\LARGE\bfseries\textcolor{primarypurple}{01}}\\[4pt]
+\textbf{Label Skew}\\[4pt]
+\footnotesize Występuje, gdy rozkłady etykiet klas różnią się znacząco między urządzeniami. Na przykład jeden telefon ma zdjęcia wyłącznie psów, a inny wyłącznie samochodów.
+\end{cardpurple}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardgreen}
+{\LARGE\bfseries\textcolor{accentgreen}{02}}\\[4pt]
+\textbf{Feature Skew}\\[4pt]
+\footnotesize Klienci posiadają te same etykiety, ale ich cechy wejściowe mają inne rozkłady (np. zdjęcia wykonywane przy różnym oświetleniu lub przez kamery o różnej rozdzielczości).
+\end{cardgreen}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardorange}
+{\LARGE\bfseries\textcolor{accentorange}{03}}\\[4pt]
+\textbf{Quantity Skew}\\[4pt]
+\footnotesize Dysproporcja w ilości posiadanych danych. Jeden z klientów posiada 10 000 próbek treningowych, podczas gdy pozostali zaledwie po 10--15 próbek.
+\end{cardorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Concept Drift}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Dynamika zmian środowiskowych}\\[4pt]
+Zjawisko \textbf{Concept Drift} (przesunięcie pojęcia) zachodzi wówczas, gdy powiązanie probabilistyczne między cechami a etykietami $P(Y\mid X)$ zmienia się w czasie lub przestrzeni.\\[6pt]
+W uczeniu federacyjnym zjawisko to przejawia się tym, że to samo zachowanie sensora może oznaczać różne stany maszyny w zależności od lokalizacji fizycznej urządzenia.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Implikacje dla agregacji}
+Modele agregowane statycznie nie nadążają za dynamicznym concept driftem. Wymaga to ciągłej adaptacji wag i elastycznych algorytmów, które potrafią korygować historię uczenia.\\[6pt]
+Złożone interakcje dynamiczne czynią manualną ocenę administratora FL bezużyteczną.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Metoda Fed-Hetero}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Samoewaluacja rozbieżności wag}\\[4pt]
+Wprowadzona przez Kummaya et al. (2025), metoda \textbf{Fed-Hetero} kładzie nacisk na wykrywanie skośności w locie poprzez analizę wag modeli.\\[6pt]
+Mierzy ona tzw. \textbf{dywergencję wagową} pomiędzy aktualizacjami klientów a modelem globalnym jako wczesny indykator zaburzeń.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Trzy filary Fed-Hetero}
+\textbf{1. Wykrywanie ilościowe:} Bezpośrednia ocena różnic w rozmiarach lokalnych zbiorów danych.\\[4pt]
+\textbf{2. Podobieństwo wizualne:} Ocena skośności cech obrazu na bazie metryk podobieństwa strukturalnego.\\[4pt]
+\textbf{3. Dywergencja Jensena--Shannona:} Obliczana bezpośrednio na histogramach rozkładu klas etykiet u klientów.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Dubey (2025)}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Wielomodalne metryki rozbieżności}\\[4pt]
+Dubey (2025) zaproponował zaawansowane podejście do szacowania rozbieżności danych w trzech wymiarach jednocześnie:
+\begin{itemize}\footnotesize
+\item \textbf{Skośność etykiet:} Wykorzystanie metryki JSD na histogramach klas.
+\item \textbf{Przesunięcie cech:} Zastosowanie odległości Wassersteina na reprezentacjach wejściowych (embeddings).
+\item \textbf{Przesunięcie wyjść modelu:} Badanie entropii i rozbieżności rozkładów softmax sieci.
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Rola wyjść softmax}
+Dzięki analizie rozkładów prawdopodobieństwa predykcji, metoda Dubey pozwala na wykrywanie zniekształceń pewności modelu, co wykracza poza zwykłe analizowanie danych wejściowych.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Mawela (2025)}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Automatyzacja FL z użyciem LLM}\\[4pt]
+Praca Mawela et al. (2025) zaprezentowała rozwiązanie webowe integrujące duże modele językowe (LLM) do automatyzacji konfiguracji eksperymentów FL.\\[6pt]
+LLM pomaga użytkownikowi zdefiniować poprawne pliki konfiguracyjne i zakresy hiperparametrów w oparciu o naturalnojęzykowy opis środowiska.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Zasadnicze ograniczenia}
+\begin{enumerate}\footnotesize
+\item System zakładał sztywne wykorzystanie algorytmu FedAvg -- nie optymalizował samej strategii agregacji.
+\item Brak automatycznej detekcji heterogeniczności -- system opierał się wyłącznie na deklaracjach wpisywanych przez człowieka.
+\item Całkowity brak optymalizacji parametrów wewnętrznych strategii odpornych.
+\end{enumerate}
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Shen et al. (2023)}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Edge AI i autonomiczne systemy agentowe}\\[4pt]
+Praca Shen et al. (2023) badała użycie LLM do sterowania autonomicznymi agentami sztucznej inteligencji na brzegu sieci (Edge AI).\\[6pt]
+LLM były odpowiedzialne za dynamiczne przydzielanie zadań obliczeniowych i monitorowanie kondycji urządzeń brzegowych.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Luka w badaniach optymalizacyjnych}
+Podobnie jak u Maweli, badania te skupiały się na orkiestracji infrastruktury i „scaffoldingu” eksperymentów, pomijając matematyczne aspekty optymalizacji procesów agregacji i przeciwdziałania zniekształceniom statystycznym danych.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Luki badawcze w literaturze naukowej}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\begin{cardpurple}
+\textbf{Brak optymalizacji parametrów}\\[4pt]
+\footnotesize Większość prac empirycznych rekomenduje jedynie nazwy strategii (np. „użyj FedProx”), całkowicie pomijając strojenie ich parametrów wewnętrznych (takich jak współczynnik $\mu$ czy dopuszczalny próg błędu w Krum), które krytycznie wpływają na wyniki.
+\end{cardpurple}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardgreen}
+\textbf{Wysoki koszt tradycyjnego HPO}\\[4pt]
+\footnotesize Metody typu AutoML bazujące na przeszukiwaniu siatkowym lub optymalizacji bayesowskiej wymagają setek pełnych cykli treningu FL, co przy ograniczeniach energetycznych i sieciowych urządzeń brzegowych jest całkowicie nierealne.
+\end{cardgreen}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardorange}
+\textbf{Brak połączenia detekcja--wybór}\\[4pt]
+\footnotesize Istniejące biblioteki albo potrafią badać skośność danych (EDA), albo potrafią agregować aktualizacje. Brakuje jednolitego, bezszumowego i w pełni autonomicznego pomostu łączącego diagnostykę z bezpośrednią rekonfiguracją potoku.
+\end{cardorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Przegląd literatury: Tabela porównawcza}
+\centering\scriptsize
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{p{2.3cm}p{1.9cm}p{2.1cm}p{1.7cm}p{1.9cm}p{2.0cm}}
+\toprule
+\textbf{Praca naukowa} & \textbf{Detekcja het.} & \textbf{Wybór strategii} & \textbf{Strojenie param.} & \textbf{Automatyzacja LLM} & \textbf{Świadomość budżetu}\\
+\midrule
+Li et al. (2021) & Nie & Tak (Sztywne reguły) & Nie & Nie & Nie\\
+Dubey (2025) & Tak & Tak (Sztywne reguły) & Nie & Nie & Nie\\
+Fed-Hetero (2025) & Tak (Lekka) & Nie & Nie & Nie & Nie\\
+Mawela / Shen (2025) & Nie & Nie & Nie & Tak (Rusztowanie) & Nie\\
+\rowcolor{lightgray}\textbf{Zaproponowane rozw.} & \textbf{Tak (Rozproszone PCA/JSD)} & \textbf{Tak (Adaptacyjny wybór)} & \textbf{Tak (Optymalizacja GA)} & \textbf{Tak (One-Shot reasoning)} & \textbf{Tak (1-tryb / 8-trybów)}\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% ============================================================
+\ustawsekcje{Sekcja 2: Prezentacja artykułu badawczego}
+\section{Prezentacja artykułu badawczego}
+
+\begin{frame}{Cel i motywacja autorów artykułu}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Bariera wejścia w Federated Learning}\\[4pt]
+Skuteczne wdrożenie systemów uczenia federacyjnego wymaga unikalnego połączenia wiedzy z zakresu optymalizacji matematycznej, teorii systemów rozproszonych oraz uczenia maszynowego.\\[6pt]
+Z powodu braku bezpośredniego wglądu w dane klientów (ze względów prywatnościowych), dobór odpowiedniej strategii agregacji przypomina błądzenie po omacku.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Główne cele badawcze}
+\begin{itemize}\footnotesize
+\item \textbf{Automatyzacja pełnego cyklu:} Od diagnostyki danych po egzekucję w Flower.
+\item \textbf{Świadomość zasobów:} Dostosowanie procesu optymalizacji do skrajnie różnych możliwości obliczeniowych urządzeń brzegowych.
+\item \textbf{Minimalizacja interwencji ludzkiej:} Usunięcie inżyniera z pętli decyzyjnej.
+\end{itemize}
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Dwa tryby działania systemu}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\begin{cardpurple}
+\textbf{1. Tryb Single-Trial (Jednorazowy)}\\[6pt]
+\footnotesize Dedykowany dla urządzeń o skrajnie ograniczonych zasobach obliczeniowych i sieciowych.\\[4pt]
+System przeprowadza szybką i tanią analizę diagnostyczną (EDA), a następnie za pomocą zaawansowanego wnioskowania LLM (GPT-4.1) generuje optymalną konfigurację w zaledwie jednym podejściu.
+\end{cardpurple}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{cardgreen}
+\textbf{2. Tryb Multi-Trial (Wielokrotny)}\\[6pt]
+\footnotesize Dedykowany dla środowisk z elastycznym budżetem obliczeniowym.\\[4pt]
+Wykorzystuje lekki, wysoce zoptymalizowany algorytm genetyczny (GA) ograniczony sztywno do maksymalnie 8 prób treningowych, co pozwala na precyzyjne dostrojenie hiperparametrów wewnątrz obiecujących klas strategii.
+\end{cardgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Architektura potoku decyzyjnego}
+\centering
+\begin{tikzpicture}[scale=1, every node/.style={font=\scriptsize}]
+\draw[thick, midgray] (0,0) -- (11,0);
+\foreach \x/\c in {0.5/primarypurple, 4/accentgreen, 7.5/accentorange, 10.7/primarypurple}
+  \fill[\c] (\x,0) circle (2.2pt);
+\node[align=center, text width=2.6cm] at (0.5,-1) {\textbf{Rozproszona analiza EDA}\\ Klienci bezpiecznie obliczają lokalne statystyki bez przesyłania danych surowych.};
+\node[align=center, text width=2.6cm] at (4,-1) {\textbf{Agregacja na serwerze}\\ Serwer łączy metryki, wyliczając globalne wskaźniki skośności i anomalii.};
+\node[align=center, text width=2.6cm] at (7.5,-1) {\textbf{Generowanie promptu}\\ Formatowanie wyników diagnostyki do strukturalnego szablonu XML/JSON.};
+\node[align=center, text width=2.6cm] at (10.7,-1) {\textbf{Wnioskowanie i start FL}\\ Weryfikacja składniowa konfiguracji i uruchomienie uczenia we Flower.};
+\end{tikzpicture}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Moduł wykrywania heterogeniczności}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Trójtorowy system diagnostyczny}\\[4pt]
+Aby dostarczyć modelowi językowemu precyzyjnych i pozbawionych szumu informacji, autorzy opracowali unikalny moduł diagnostyczny działający w trzech obszarach:
+\begin{itemize}\footnotesize
+\item \textbf{Label Skew Detection Module:} Wykrywa zaburzenia rozkładu klas etykiet wyjściowych.
+\item \textbf{Outlier Detection Module:} Identyfikuje potencjalnie złośliwe lub uszkodzone węzły klienckie.
+\item \textbf{Feature Skew Detection Module:} Wykrywa przesunięcia rozkładów cech wejściowych (kowariancji).
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Zasady prywatności (Privacy-Preserving)}
+Żadne surowe próbki danych (np. piksele obrazów, wpisy w bazie danych) nie są przesyłane do serwera podczas analizy. Moduły operują wyłącznie na rozproszonych reprezentacjach matematycznych i zagregowanych histogramach, co gwarantuje pełne bezpieczeństwo danych.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Detekcja Label Skew: Rozbieżność JS}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Dlaczego rozbieżność Jensena--Shannona?}\\[4pt]
+W przeciwieństwie do uproszczonych miar entropii, rozbieżność Jensena--Shannona (JSD) posiada pożądane cechy matematyczne:
+\begin{itemize}\footnotesize
+\item Jest symetryczna: $JS(P\Vert Q) = JS(Q\Vert P)$.
+\item Jest ściśle ograniczona w przedziale $[0,1]$, co umożliwia łatwe zdefiniowanie stałego progu decyzyjnego.
+\item Idealnie wychwytuje różnice proporcji klas w zadaniach binarnych i wieloklasowych.
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Zasada działania algorytmu}
+\textbf{Krok 1:} Każdy klient oblicza lokalny rozkład prawdopodobieństwa występowania etykiet klas i wysyła histogram do serwera.\\[3pt]
+\textbf{Krok 2:} Serwer wyznacza globalny rozkład uśredniony.\\[3pt]
+\textbf{Krok 3:} Obliczana jest maksymalna wartość JSD pomiędzy klientami a średnią globalną. Jeśli przekracza próg $\tau=0.1$, ogłaszany jest stan skośności danych.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Formuła matematyczna JSD}
+\textbf{Równanie rozbieżności Jensena--Shannona}\\[6pt]
+Dla rozkładu klienta $P$ oraz globalnego rozkładu referencyjnego $Q$, JSD definiowane jest na bazie dywergencji Kullbacka--Leiblera (KL) w następujący sposób:
+\[
+JS(P\Vert Q) = \frac{1}{2}KL(P\Vert M) + \frac{1}{2}KL(Q\Vert M)
+\]
+Gdzie $M$ stanowi rozkład mieszany określony formułą:
+\[
+M = \frac{1}{2}(P+Q)
+\]
+Dzięki takiemu sformułowaniu unikamy problemu dzielenia przez zero występującego w czystej dywergencji KL, gdy niektóre klasy nie występują lokalnie u danego klienta.
+\end{frame}
+
+% ============================================================
+\begin{frame}{Detekcja anomalii (Outlier Detection)}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Analiza wag w drugiej rundzie FL}\\[4pt]
+Aby wykryć anomalnych lub złośliwych klientów, system zbiera lokalne wagi modeli tuż po zakończeniu \textbf{drugiej rundy} uczenia federacyjnego (wykorzystując wyjściowy algorytm FedAvg).\\[6pt]
+Serwer wyznacza macierz odległości euklidesowych pomiędzy wszystkimi parami wektorów wag klientów.
+\begin{infoboxorange}{Dlaczego akurat druga runda?}
+\footnotesize W pierwszej rundzie wagi są zaszumione losową inicjalizacją. W kolejnych rundach proces uśredniania rozmywa różnice. Druga runda daje najczystszy sygnał lokalnych trendów optymalizacyjnych.
+\end{infoboxorange}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Zabezpieczenie przed fałszywym alarmem}
+Stochastyczny charakter uczenia może powodować chwilowe skoki rozbieżności u uczciwych klientów. Aby temu zapobiec, badanie jest powtarzane kilkukrotnie (z kilkoma epokami lokalnymi).\\[6pt]
+Węzeł zostaje ostatecznie oznaczony jako \textbf{outlier} tylko wtedy, gdy jego skumulowany wskaźnik rozbieżności mieści się w 90. percentylu w co najmniej 4 próbach testowych.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Detekcja Feature Skew: Federated PCA}
+\begin{columns}[T]
+\begin{column}{0.6\textwidth}
+\textbf{Zwalczanie przekleństwa wymiarowości}\\[4pt]
+Surowe dane wejściowe (np. obrazy o wysokiej rozdzielczości) zawierają tysiące cech o wysokim poziomie szumu informacyjnego.\\[6pt]
+Bezpośrednia analiza odległości w tak wysokiej wymiarowości jest numerycznie bezużyteczna (przekleństwo wymiarowości).\\[6pt]
+Rozwiązaniem jest \textbf{rozproszona analiza głównych składowych (Federated PCA)}, która rzutuje dane na bezpieczną dwuwymiarową przestrzeń cech.
+\end{column}
+\begin{column}{0.4\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.9]
+\draw[->] (0,0) -- (2.4,0) node[right, font=\tiny]{PC1};
+\draw[->] (0,0) -- (0,2.4) node[above, font=\tiny]{PC2};
+\foreach \x/\y in {0.3/0.4,0.5/0.6,0.4/0.3,0.6/0.5} \fill[primarypurple] (\x,\y) circle(1.5pt);
+\foreach \x/\y in {1.8/1.9,1.6/2.0,1.9/1.7,1.7/2.1} \fill[accentorange] (\x,\y) circle(1.5pt);
+\end{tikzpicture}\\
+{\tiny Rzutowanie klientów na wspólną przestrzeń cech}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Matematyka rozproszonego PCA}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\begin{cardpurple}
+\textbf{Etap 1: Lokalna kowariancja}\\[6pt]
+\footnotesize Każdy klient lokalnie oblicza wektor sum cech, sumy kwadratów oraz iloczyny skrzyżowane cech, niezbędne do odtworzenia macierzy kowariancji:
+\[
+\Sigma_i = X_i^T X_i
+\]
+{\footnotesize Przesyłana jest wyłącznie macierz $\Sigma$, co uniemożliwia odtworzenie próbek.}
+\end{cardpurple}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{cardgreen}
+\textbf{Etap 2: Globalna projekcja}\\[6pt]
+\footnotesize Serwer sumuje macierze lokalne, odtwarza globalną macierz kowariancji, wyznacza dwa najważniejsze wektory własne i odsyła je do klientów.\\[6pt]
+Klienci rzutują swoje dane na te wektory i zwracają jedynie centroidy rzutów. Serwer bada ich separację euklidesową (próg $\tau=1.0$).
+\end{cardgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Tryb Single-Trial: Prompt Engineering}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Wnioskowanie z GPT-4.1}\\[4pt]
+Po zakończeniu diagnostyki EDA, zebrane informacje (Label Skew, Feature Skew, Outlier Risk) są kodowane w ustrukturyzowany prompt wejściowy dla LLM.\\[6pt]
+Rola modelu językowego polega na przetłumaczeniu tych abstrakcyjnych deskryptorów statystycznych na precyzyjny słownik parametrów optymalizacyjnych Flower.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Kluczowe innowacje promptu}
+\begin{itemize}\footnotesize
+\item \textbf{Wbudowana fl\_schema:} Model otrzymuje dokładną listę dozwolonych strategii i przedziałów liczbowych parametrów, eliminując błędy składniowe.
+\item \textbf{Few-Shot Prompting:} Umieszczenie konkretnych przykładów poprawnego kodu JSON w instrukcji systemowej zwiększyło stabilność generowania z 40\% do 100\%.
+\end{itemize}
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Analiza formatów promptów wejściowych}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\begin{cardpurple}
+\textbf{Format-A: Dane surowe}\\[4pt]
+\footnotesize Dostarcza modelowi surowe liczbowe statystyki rozkładów i odległości.\\[3pt]
+{\color{red!70!black}\footnotesize $\times$ Słaba wydajność}\\[3pt]
+\footnotesize LLM słabo interpretują skomplikowane korelacje liczbowe bez wcześniejszego przetworzenia semantycznego.
+\end{cardpurple}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardgreen}
+\textbf{Format-B: Flagi binarne}\\[4pt]
+\footnotesize Dostarcza uproszczone flagi (TAK/NIE) określające obecność ryzyka skośności lub anomalii.\\[3pt]
+{\color{accentgreen}\footnotesize $\checkmark$ Najlepsza wydajność}\\[3pt]
+\footnotesize Jasny podział logiczny pozwala LLM na szybkie dopasowanie właściwej klasy algorytmów.
+\end{cardgreen}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardorange}
+\textbf{Format-C: Poziomy ryzyka}\\[4pt]
+\footnotesize Wprowadza trzystopniową skalę ryzyka (Wysokie/Niskie/Brak).\\[3pt]
+{\color{accentorange}\footnotesize $\bullet$ Średnia wydajność}\\[3pt]
+\footnotesize Model wykazuje nieoczekiwaną niewrażliwość na gradację ryzyka, dając niespójne wartości parametrów.
+\end{cardorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Mechanizm walidacji i powtórzeń}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Zabezpieczenie przed halucynacjami}\\[4pt]
+Modele LLM, mimo zaawansowania, wykazują tendencję do generowania niepoprawnego kodu lub halucynowania nazw parametrów.\\[6pt]
+W środowisku produkcyjnym uruchomienie błędnej konfiguracji skutkuje awarią całego klastra Flower i stratą zasobów.\\[6pt]
+Wprowadzono autonomiczny \textbf{parser składniowy} sprawdzający zgodność wyjścia z dozwolonym schematem.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Pętla korekcyjna (do 3 prób)}
+\textbf{Krok 1:} Odczyt odpowiedzi i weryfikacja typów danych (np. czy \texttt{proximal\_mu} jest float).\\[3pt]
+\textbf{Krok 2:} W przypadku błędu, system wysyła prompt zwrotny z precyzyjnym wskazaniem linii błędu kompilatora.\\[3pt]
+\textbf{Krok 3:} Przy braku poprawy po 3 próbach, system bezpiecznie uruchamia domyślny, stabilny algorytm FedAvg.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Wybór Format-B jako standardu}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Przewaga prostoty nad nadmiarem danych}\\[4pt]
+Badania nad promptami dowiodły, że \textbf{Format-B} (flagi tak/nie) pozwala modelowi językowemu na dokonanie najczystszej kategoryzacji semantycznej.\\[6pt]
+Wprowadzenie gradacji (Format-C) powodowało paradoksalne błędy: dla mniejszej skośności model potrafił przypisać wyższą karę regularyzacyjną $\mu$, co tłumiło proces uczenia.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Główne uzasadnienie}
+Ograniczenie wyboru do binarnej oceny ryzyka stabilizuje proces wnioskowania LLM i eliminuje fluktuacje generowanych parametrów liczbowych. Pozwala to na przewidywalne i bezpieczne wdrażanie strategii w systemach krytycznych.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Tryb Multi-Trial: Bariery HPO}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Koszt optymalizacji hiperparametrów}\\[4pt]
+W scenariuszach, gdzie dopuszczalne jest wykonanie kilku prób treningowych, tradycyjne podejścia AutoML (np. Optuna z algorytmem TPE) napotykają barierę kosztów.\\[6pt]
+Optymalizacja Bayesowska wymaga zazwyczaj \textbf{50--100 pełnych procesów FL} do odnalezienia optimum.\\[6pt]
+W warunkach rozproszonych oznacza to ogromny narzut energetyczny i przeciążenie pasma komunikacyjnego klientów IoT.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Krytyczne ograniczenie brzegowe}
+Dla wielu urządzeń brzegowych zasilanych bateryjnie, wykonanie kilkudziesięciu pełnych treningów sieci neuronowej jest równoznaczne z rozładowaniem urządzenia i przerwaniem jego pracy operacyjnej.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Dlaczego Algorytmy Genetyczne?}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Zalety wyszukiwania euklidesowego}\\[4pt]
+Algorytmy genetyczne (GA) doskonale balansują eksplorację przestrzeni z eksploatacją najlepszych dotychczasowych osobników.\\[6pt]
+W warunkach skrajnie małego budżetu prób (sztywny limit do \textbf{8 prób}), GA potrafi wykryć obiecujące minima parametrów znacznie szybciej niż metody statystyczne.\\[6pt]
+Optymalizacja przebiega dwuetapowo: najpierw następuje selekcja obiecującej klasy strategii, a następnie lokalne dostrojenie jej parametrów.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Szybka konwergencja}
+Dzięki rygorystycznemu zachowywaniu najlepszych osobników (elitaryzm) i ukierunkowanym mutacjom lokalnym, algorytm genetyczny osiąga wyniki porównywalne z 50-próbowym przeszukiwaniem Optuna w zaledwie 8 podejściach.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Struktura wyszukiwania genetycznego}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\begin{cardpurple}
+\textbf{Generacja 1: Eksploracja}\\[6pt]
+\footnotesize \textbf{Rozmiar populacji:} 4 unikalne osobniki.\\[4pt]
+Konfiguracje są losowane równomiernie z całej przestrzeni dopuszczalnych strategii (np. Krum, FedProx, FedMedian) i ich hiperparametrów.\\[4pt]
+Wszystkie próby są uruchamiane i oceniane pod kątem dokładności ważonej modelu.
+\end{cardpurple}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{cardgreen}
+\textbf{Generacja 2: Eksploatacja}\\[6pt]
+\footnotesize \textbf{Wybór rodziców:} Top-2 z globalnego archiwum.\\[4pt]
+Nowe 4 osobniki powstają poprzez mutacje rodziców. Typ strategii agregacji zostaje zamrożony, a modyfikacji ulegają wyłącznie jej parametry numeryczne w małym zakresie lokalnym.\\[4pt]
+Zapewnia to precyzyjne dostrojenie wartości wokół wykrytego optimum.
+\end{cardgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Ewolucja: Selekcja i Mutacja}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Zasady mutacji numerycznych}\\[4pt]
+Aby mutacje były matematycznie spójne, zastosowano odrębne reguły dla różnych typów zmiennych hiperparametrycznych:\\[6pt]
+Dla parametrów całkowitoliczbowych (np. liczba tolerowanych złośliwych klientów $f$ w Krum):
+\[
+x' = \mathrm{clip}(x + \mathrm{Unif}\{-1,0,1\})
+\]
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Parametry rzeczywiste}
+Dla zmiennych ciągłych (np. $\mu$ w FedProx) mutacja polega na dodaniu małego szumu losowego:
+\[
+x' = \mathrm{clip}(x+\varepsilon,\,[a,b])
+\]
+{\footnotesize Gdzie $\varepsilon\sim\mathrm{Unif}[-0.1,0.1]$, a zakres zostaje przycięty do dopuszczalnych granic dziedziny $[a,b]$.}
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Zbiory danych w eksperymentach}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Zróżnicowanie domen badawczych}\\[4pt]
+Aby dowieść uniwersalności zaproponowanego frameworku, autorzy przeprowadzili szeroko zakrojone testy na zbiorach danych o skrajnie odmiennych charakterystykach:
+\begin{itemize}\footnotesize
+\item \textbf{NASA Bearing Dataset:} Dane tabularyczne z czujników wibracyjnych. Wykorzystany do precyzyjnych symulacji kontrolowanej heterogeniczności.
+\item \textbf{CIFAR-10:} Referencyjny zbiór obrazów naturalnych. Podzielony metodą partycjonowania Dirichleta w celu indukcji silnego label skew.
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Symulacje zaburzeń danych}
+Na bazie zbioru NASA Bearing stworzono sześć unikalnych scenariuszy badawczych:
+\begin{enumerate}\footnotesize
+\item Standardowy rozkład IID (baza porównawcza).
+\item Label Skew (klienci posiadają inne proporcje klas).
+\item Noisy Labels (część etykiet losowo zaburzona).
+\item Label Poisoning (pełne odwrócenie klas u jednego klienta).
+\end{enumerate}
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Dodatkowe domeny walidacyjne}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\begin{cardpurple}
+\textbf{Retina Dataset}\\[4pt]
+\footnotesize \textbf{Wizyjny (Medyczny).}\\[3pt]
+Rzeczywista (niesymulowana) heterogeniczność wynikająca z różnic sprzętowych i demograficznych w szpitalach klinicznych podczas diagnostyki jaskry.
+\end{cardpurple}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardgreen}
+\textbf{Sentiment140}\\[4pt]
+\footnotesize \textbf{Tekstowy (NLP).}\\[3pt]
+Analiza sentymentu wpisów na portalu Twitter. Testuje odporność systemu na wysoką wymiarowość osadzeń językowych (embeddings).
+\end{cardgreen}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardorange}
+\textbf{CartPole (OpenGym)}\\[4pt]
+\footnotesize \textbf{Uczenie przez wzmacnianie.}\\[3pt]
+Federated Reinforcement Learning (FRL). Zadanie kontroli fizycznej pod wpływem drastycznie różnych parametrów grawitacji u klientów.
+\end{cardorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Wyniki: Skuteczność detekcji}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Precyzja diagnostyki statycznej}\\[4pt]
+Wszystkie zaprojektowane moduły diagnostyczne wykazały się 100\% zbieżnością z rzeczywistym, kontrolowanym stanem heterogeniczności danych:
+\begin{itemize}\footnotesize
+\item \textbf{Moduł Label Skew:} Zwracał niemal zerowe wartości JSD ($<0.0002$) dla rozkładów IID i wysokie wartości (0.189 do 0.434) dla danych silnie zaburzonych.
+\item \textbf{Moduł Outlier:} Bezbłędnie flagował klientów z zatrutymi etykietami (label poisoning) we wszystkich powtórzeniach.
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Stabilność numeryczna PCA}
+Wykrywanie Feature Skew za pomocą rozproszonego PCA dało wyraźny rozdział odległości centroidów:
+\begin{itemize}\footnotesize
+\item Rozkład IID: Odległość centroidów $=0.577$
+\item Zaburzenie średnie: Odległość centroidów $=7.435$
+\item Silne przesunięcie: Odległość centroidów $=15.060$
+\end{itemize}
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Wyniki dokładności: NASA Bearing}
+\centering\scriptsize
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Scenariusz zaburzenia} & \textbf{Optymalny HPO} & \textbf{GA (proponowane)} & \textbf{Single-Shot LLM} & \textbf{Standardowy FedAvg}\\
+\midrule
+Label Skew     & $0.6729\pm0.014$ & $0.6679\pm0.012$ & $0.6360\pm0.005$ & $0.6186\pm0.016$\\
+Label Poisoning& $0.6060\pm0.016$ & $0.6223\pm0.019$ & $0.6087\pm0.018$ & $0.5543\pm0.025$\\
+Noisy Label    & $0.6948\pm0.018$ & $0.6882\pm0.023$ & $0.6548\pm0.041$ & $0.6393\pm0.050$\\
+Feature Skew   & $0.7250\pm0.013$ & $0.7112\pm0.044$ & $0.7022\pm0.024$ & $0.6806\pm0.034$\\
+\bottomrule
+\end{tabular}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Analiza: Single-Shot LLM vs FedAvg}
+\sloppy
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Bezpieczny wzrost bez dodatkowych kosztów}\\[4pt]
+Nawet w skrajnie ograniczonym budżecie \textbf{Single-Trial} (gdzie dozwolona jest tylko jedna próba uruchomienia FL), system z rekomendacją LLM wykazuje stałą przewagę nad ślepym algorytmem FedAvg.\\[6pt]
+Największa przewaga widoczna jest w środowisku wrogim (Label Poisoning), gdzie FedAvg załamuje się do dokładności $55.43\%$, podczas gdy LLM natychmiast sugeruje algorytm Krum, podbijając dokładność do $60.87\%$.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Zysk zerokosztowy}
+Wybór dokonany przez model GPT-4.1 na podstawie binarnego promptu diagnostycznego nie generuje żadnego dodatkowego narzutu czasowego na urządzenia klienckie podczas właściwego treningu, stanowiąc darmowe ulepszenie systemowe.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Wydajność wyszukiwania genetycznego}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Redukcja zasobów o 84\%}\\[4pt]
+Aby uświadomić sobie wagę innowacji algorytmu genetycznego w trybie Multi-Trial, należy zestawić ze sobą liczby wymaganych prób optymalizacyjnych:
+\begin{itemize}\footnotesize
+\item Tradycyjna Optuna (Bayes): \textbf{50 pełnych treningów FL}.
+\item Zaproponowany Algorytm Genetyczny: \textbf{8 pełnych treningów FL}.
+\end{itemize}
+Stanowi to drastyczny krok naprzód w kierunku ekologicznego i zielonego uczenia maszynowego (Green AI).
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Efekt ekologiczny i kosztowy}
+Drastyczne obcięcie liczby prób optymalizacyjnych z 50 do 8 bezpośrednio przekłada się na obniżenie rachunków za transfer danych komórkowych oraz mniejsze zużycie baterii na urządzeniach IoT o ponad 80\% przy zachowaniu niemal identycznej precyzji modeli globalnych.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Analiza czasu wykonania i EDA}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Koszt diagnostyki wstępnej}\\[4pt]
+Pojawia się zasadnicze pytanie: czy faza detekcji heterogeniczności (EDA) nie trwa zbyt długo, niwelując zyski z szybkiego uczenia?\\[6pt]
+Cały proces diagnostyki EDA na zbiorze NASA Bearing trwa \textbf{73.96 sekund}, co odpowiada kosztowi zaledwie 63 rund zwykłego uczenia FedAvg.\\[6pt]
+Dla modeli, które trenują się przez setki rund, ten narzut początkowy jest całkowicie marginalny.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Rozbicie czasowe komponentów}
+\begin{tabular}{lr}
+Jedna runda FL (Baza) & 1.16 s\\
+Detekcja Label Skew & 8.31 s\\
+Detekcja Feature Skew & 11.19 s\\
+Detekcja Outliers & 54.45 s\\
+\end{tabular}
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Złożoność obliczeniowa PCA}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Skalowanie względem cech i próbek}\\[4pt]
+Złożoność obliczeniowa po stronie klienta wynosi $O(Nd^2)$, gdzie $N$ to liczba lokalnych próbek, a $d$ to liczba cech wejściowych.\\[6pt]
+Po stronie serwera złożoność wynosi $O(Kd^2+d^3)$, gdzie $K$ to liczba klientów, a człon $d^3$ reprezentuje koszt dekompozycji spektralnej kowariancji.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Wniosek inżynieryjny}
+Ponieważ koszt rośnie kwadratowo wraz z wymiarem cech $d$, bezpośrednie stosowanie Federated PCA na surowych pikselach obrazów (gdzie $d$ wynosi dziesiątki tysięcy) jest nieefektywne.\\[6pt]
+W takich przypadkach autorzy zalecają stosowanie \textbf{ekstrakcji cech} (np. za pomocą lekkich sieci ResNet-18) przed uruchomieniem PCA, co redukuje wymiar wejściowy do małego wektora osadzeń.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Skalowanie do dużej liczby węzłów}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Zachowanie przy 10, 50 i 100 klientach}\\[4pt]
+Aby sprawdzić, czy system nie załamuje się w miarę wzrostu rozproszenia sieci, przetestowano skalowalność potoku decyzyjnego dla zbioru CIFAR-10 na konfiguracjach liczących 4, 10, 50 oraz 100 węzłów.\\[6pt]
+W miarę wzrostu liczby węzłów, lokalne zbiory danych stają się coraz mniejsze i bardziej skrajnie zaburzone.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infobox}{Stabilność przewagi}
+Eksperymenty dowiodły, że przewaga algorytmu genetycznego (GA) nad domyślnym FedAvg \textbf{rośnie wraz z liczbą węzłów}. Przy 100 węzłach i silnej skośności ($\alpha=0.1$), FedAvg całkowicie stagnuje, podczas gdy GA pomyślnie wyprowadza model z kryzysu zbieżności.
+\end{infobox}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Trendy zbieżności uczenia}
+\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+\textbf{Stabilizacja procesu uczenia}\\[4pt]
+Poniższy wykres poglądowy ilustruje trajektorie zbieżności dokładności modeli w czasie rund treningowych pod wpływem różnych strategii agregacji przy silnej skośności danych.\\[6pt]
+Widoczna jest natychmiastowa stabilizacja i brak oscylacji w przypadku dynamicznie dobranych strategii genetycznych.
+\end{column}
+\begin{column}{0.55\textwidth}
+\centering
+\begin{tikzpicture}[scale=0.95]
+\draw[->] (0,0) -- (6,0) node[right,font=\tiny]{Rundy};
+\draw[->] (0,0) -- (0,3.4) node[above,font=\tiny]{Dokładność};
+\draw[dashed, midgray] (0,3) -- (6,3) node[left, font=\tiny, pos=0]{Optimum (Best)};
+\draw[accentgreen, thick] plot[smooth] coordinates {(0,0)(1,1.4)(2,2.2)(3,2.7)(4,2.85)(5,2.95)(6,3.0)};
+\draw[red!70!black, thick] plot[smooth] coordinates {(0,0)(1,0.7)(2,1.2)(3,1.5)(4,1.65)(5,1.7)(6,1.72)};
+\node[accentgreen, font=\tiny, right] at (6,3.0) {Genetic Search (GA)};
+\node[red!70!black, font=\tiny, right] at (6,1.72) {FedAvg (Słaby)};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Generalizacja: Inne modalności}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Od tekstu po Reinforcement Learning}\\[4pt]
+Znakomita większość prac z zakresu automatyzacji FL ogranicza się wyłącznie do prostych klasyfikacji obrazów. Prezentowany framework łamie ten schemat:
+\begin{itemize}\footnotesize
+\item \textbf{Sentiment140 (NLP):} Z powodzeniem dobrano optymalne wagi agregacji dla klasyfikacji tekstu przy użyciu sieci TextCNN.
+\item \textbf{CartPole (Uczenie przez wzmacnianie):} Algorytm genetyczny pomyślnie zoptymalizował model DQN w warunkach skrajnych różnic fizycznych między klientami.
+\end{itemize}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Dostosowanie metryk dla FRL}
+W uczeniu przez wzmacnianie standardowa dokładność ważona nie istnieje.\\[6pt]
+Autorzy wykazali się elastycznością metodologiczną, zastępując dokładność ważoną \textbf{medianą średniej nagrody (reward)} z ostatnich rund treningowych, co pozwoliło na stabilną optymalizację agentów DQN.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Podsumowanie wdrożenia i korzyści}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\begin{cardpurple}
+{\LARGE\bfseries\textcolor{primarypurple}{01}}\\[4pt]
+\textbf{Bezpieczeństwo i stabilność}\\[4pt]
+\footnotesize Bezbłędne odpieranie ataków typu label poisoning i tłumienie złośliwych aktualizacji bez potrzeby ciągłego nadzoru administratora bezpieczeństwa.
+\end{cardpurple}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardgreen}
+{\LARGE\bfseries\textcolor{accentgreen}{02}}\\[4pt]
+\textbf{Demokratyzacja FL}\\[4pt]
+\footnotesize Otwarcie drzwi do wdrożeń uczenia federacyjnego dla firm i instytucji nieposiadających dedykowanych zespołów R\&D z zakresu matematyki optymalizacyjnej.
+\end{cardgreen}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{cardorange}
+{\LARGE\bfseries\textcolor{accentorange}{03}}\\[4pt]
+\textbf{Oszczędność czasu}\\[4pt]
+\footnotesize Skrócenie czasu potrzebnego na uruchomienie i optymalizację środowiska FL z kilku tygodni testów manualnych do zaledwie kilkudziesięciu minut zautomatyzowanego potoku.
+\end{cardorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\ustawsekcje{Sekcja 3: Krytyka artykułu naukowego}
+\section{Krytyka artykułu naukowego}
+
+\begin{frame}{Krytyka: Zależność od architektury}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Wpływ lokalnego modelu na wyniki}\\[4pt]
+Proces automatycznego wyboru strategii agregacji w zaproponowanym frameworku zakłada, że architektura lokalnego modelu ML (np. sieć CNN) jest stała i optymalna dla danego zadania.\\[6pt]
+W rzeczywistości, suboptymalna konstrukcja modelu lokalnego (np. zbyt mała liczba warstw lub złe współczynniki uczenia) całkowicie niweluje zyski płynące z optymalnej agregacji.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Poważna luka systemowa}
+Optymalizator agregacji próbuje „leczyć objawy” heterogeniczności na serwerze, podczas gdy „źródło choroby” leży bezpośrednio w złej konfiguracji hiperparametrów lokalnych u klientów, na co system nie ma żadnego wpływu.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Krytyka: Koszt obliczeniowy PCA}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Problem z wysoką wymiarowością cech}\\[4pt]
+Rozproszona metoda PCA, choć elegancka matematycznie, wymaga od klientów przesyłania macierzy iloczynów skrzyżowanych o wymiarze $d\times d$.\\[6pt]
+Dla nowoczesnych zadań uczenia maszynowego (np. analizy sekwencji genomicznych lub obrazów 3D wysokiej rozdzielczości), wymiarowość $d$ sięga milionów.\\[6pt]
+Przesyłanie i dekompozycja macierzy o takim rozmiarze paraliżuje sieć i serwer agregujący.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Ograniczenie skalowalności}
+Autorzy sprytnie ominęli ten problem w CIFAR-10, stosując zamrożone embeddingi z ResNet-18.\\[6pt]
+Jednak w scenariuszach, gdzie nie dysponujemy pre-trenowanymi modelami i musimy uczyć reprezentacje cech od zera, faza diagnostyczna PCA staje się wąskim gardłem obliczeniowym, uniemożliwiając wdrożenie na urządzeniach brzegowych.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Krytyka: Wrażliwość na progi $\tau$}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Arbitralny wybór parametrów EDA}\\[4pt]
+Wykrywanie skośności danych i anomalii opiera się na sztywnych progach decyzyjnych:
+\begin{itemize}\footnotesize
+\item Próg JSD dla Label Skew: $\tau=0.1$
+\item Próg dystansu centroidów PCA: $\tau=1.0$
+\end{itemize}
+Wartości te zostały dobrane przez autorów w sposób całkowicie empiryczny, ad-hoc, pod kątem użytych zbiorów danych.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Brak zdolności adaptacyjnych}
+Dla nowych, nieznanych wcześniej zbiorów danych, te arbitralne progi decyzyjne mogą okazać się zbyt czułe lub zbyt tolerancyjne, prowadząc do błędnych diagnoz heterogeniczności i w konsekwencji -- do wyboru skrajnie suboptymalnych strategii agregacji.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Krytyka: Ryzyko halucynacji LLM}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Niestabilność modeli generatywnych}\\[4pt]
+Użycie modelu LLM (nawet tak zaawansowanego jak GPT-4.1) w pętli produkcyjnej systemów rozproszonych zawsze wiąże się z ryzykiem niedeterminizmu.\\[6pt]
+Mimo zastosowania walidatora i pętli powtórzeń, istnieje niezerowe prawdopodobieństwo, że LLM wygeneruje poprawną składniowo, ale matematycznie absurdalną wartość parametru.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Przykładowy scenariusz krytyczny}
+Dla średniego poziomu zaburzeń model językowy może zhalucynować i przypisać wartość $\mu=100.0$ w FedProx. Taki parametr przejdzie pomyślnie testy walidacji składniowej, ale w praktyce całkowicie zablokuje uczenie modeli klienckich, marnując cenne zasoby obliczeniowe.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Krytyka: Ryzyko wycieku prywatności}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Bezpieczeństwo macierzy kowariancji}\\[4pt]
+Autorzy twierdzą, że przesyłanie lokalnych macierzy kowariancji $X^TX$ gwarantuje pełną ochronę prywatności, ponieważ nie ujawnia surowych próbek.\\[6pt]
+W świetle nowoczesnych badań z zakresu cyberbezpieczeństwa (np. rekonstrukcji danych na bazie kowariancji), twierdzenie to jest nadmiernym uproszczeniem.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Ataki rekonstrukcyjne (Inference Attacks)}
+Złośliwy serwer agregujący, posiadający dostęp do pełnej struktury kowariancji cech klienta, może za pomocą metod optymalizacyjnych zrekonstruować statystyczny profil danych wejściowych.\\[6pt]
+Jest to szczególnie niebezpieczne w medycynie, gdzie profil kowariancji może ujawnić obecność unikalnych markerów genetycznych pacjenta, naruszając rygorystyczne przepisy prawne.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Krytyka: Pomijanie asynchroniczności}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Problem urządzeń powolnych (Stragglers)}\\[4pt]
+W rzeczywistych sieciach brzegowych urządzenia klienckie mają skrajnie różne moce obliczeniowe i warunki sieciowe.\\[6pt]
+Niektóre urządzenia (tzw. \textbf{stragglers}) mogą potrzebować znacznie więcej czasu na wykonanie lokalnych epok lub przesłanie danych diagnostycznych EDA.\\[6pt]
+Zaproponowany system działa w trybie \textbf{ściśle synchronicznym}.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Blokowanie klastra}
+W przypadku awarii lub drastycznego opóźnienia sieci u jednego z 100 klientów, cały potok diagnostyczny serwera zostaje zablokowany, czekając na spóźnione statystyki PCA. Paraliżuje to działanie systemu i uniemożliwia jego stosowanie w sieciach mobilnych o zmiennej jakości sygnału.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Krytyka: Statyczny charakter wyboru}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Założenie o niezmienności skośności}\\[4pt]
+Framework dokonuje diagnozy heterogeniczności \textbf{jednorazowo, przed rozpoczęciem właściwego uczenia} (lub w trybie Multi-Trial ulega ewolucji na stałej konfiguracji).\\[6pt]
+W rzeczywistości, rozkłady danych u klientów brzegowych stale ewoluują w czasie (koncepcyjne przesunięcie czasowe).
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Brak dynamicznej rekonfiguracji}
+Jeśli po 50 rundach uczenia rozkład danych na telefonach użytkowników drastycznie się zmieni (np. z powodu zmiany pory roku lub trendów społecznych), raz dobrana przez LLM statyczna strategia agregacji staje się nieefektywna, a system nie posiada mechanizmu ciągłego monitorowania zmian.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Krytyka: Złożoność inżynieryjna}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Problem z utrzymaniem kodu}\\[4pt]
+Połączenie w jednym potoku bibliotek PyTorch, platformy Flower, parserów JSON, modeli językowych OpenAI API oraz algorytmów genetycznych tworzy potężny, skomplikowany technologicznie ekosystem.\\[6pt]
+Utrzymanie stabilności takiego systemu w warunkach produkcyjnych rodzi ogromne wyzwania DevOps.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Punkt zapalny awarii}
+Wystarczy jakakolwiek zmiana w strukturze odpowiedzi API OpenAI lub drobna modyfikacja formatu danych we Flower, by cały zautomatyzowany potok przestał działać, wymagając natychmiastowej i kosztownej interwencji programistów.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Krytyka: Uproszczona ewaluacja}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Stosowanie uproszczonych modeli}\\[4pt]
+Eksperymenty zostały przeprowadzone przy użyciu relatywnie małych, prostych modeli uczenia maszynowego (np. płytkie sieci MLP dla NASA Bearing czy proste architektury CNN dla CIFAR-10).\\[6pt]
+Współczesny przemysł opiera się natomiast na potężnych modelach (np. sieciach Transformer o miliardach parametrów).
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Brak dowodów skalowalności modelu}
+Dla modeli o ogromnej pojemności pamięciowej zjawiska dryfu klienta i przeuczenia lokalnego zachodzą w zupełnie innej dynamice matematycznej. Brak rygorystycznej walidacji na modelach typu Transformer uniemożliwia bezwarunkowe potwierdzenie skuteczności frameworku w nowoczesnych systemach generatywnych.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Krytyka: Brak analizy sieciowej}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Ignorowanie kosztów transferu}\\[4pt]
+Artykuł szczegółowo opisuje oszczędności czasu i procesora po stronie serwera oraz sprytne skrócenie prób HPO do 8.\\[6pt]
+Całkowicie pominięto natomiast rygorystyczny pomiar \textbf{narzutu komunikacyjnego (network overhead)} wygenerowanego przez przesyłanie statystyk diagnostycznych.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxorange}{Kluczowa luka telekomunikacyjna}
+W uczeniu federacyjnym to transfer sieciowy (uplink) jest zazwyczaj głównym ograniczeniem systemowym, a nie moc obliczeniowa procesora. Brak dokładnego bilansu przesłanych megabajtów podczas PCA i JSD uniemożliwia rzetelną ocenę efektywności ekonomicznej wdrożenia w sieciach IoT z limitowanym transferem danych.
+\end{infoboxorange}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\ustawsekcje{Sekcja 4: Autorskie propozycje rozwoju (Nowe pomysły)}
+\section{Autorskie propozycje rozwoju (Nowe pomysły)}
+
+\begin{frame}{Droga rozwoju: Integracja z NAS}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Wspólne projektowanie sieci i agregacji}\\[4pt]
+Aby rozwiązać problem zależności od architektury, proponujemy połączenie wyboru strategii agregacji z \textbf{automatycznym wyszukiwaniem architektury sieci (Neural Architecture Search -- FedNAS)}.\\[6pt]
+System powinien jednocześnie ewoluować architekturę lokalnego modelu u klientów oraz dobierać dla niej strategię agregacji na serwerze.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Synergia optymalizacyjna}
+Dzięki takiemu podejściu, system automatycznie zmniejsza pojemność modelu u klientów o silnej skośności danych (zapobiegając przeuczeniu lokalnemu) i jednocześnie zwiększa parametry regularyzacji FedProx, osiągając pełną synergię sprzętowo-algorytmiczną.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Droga rozwoju: Prywatność różnicowa}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Bezpieczna diagnostyka z DP}\\[4pt]
+Aby całkowicie wyeliminować ryzyko ataków rekonstrukcyjnych na bazie macierzy kowariancji, proponujemy wdrożenie \textbf{adaptacyjnej prywatności różnicowej (Differential Privacy -- DP)} podczas fazy EDA.\\[6pt]
+Do przesyłanych statystyk kowariancji dodawany jest kontrolowany szum matematyczny (np. szum Gaussa) skalowany za pomocą parametru budżetu prywatności $\varepsilon$.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Gwarancje matematyczne}
+Wprowadzenie DP zapewnia formalne, matematyczne gwarancje bezpieczeństwa (szum uniemożliwia rekonstrukcję surowych pikseli), a model LLM zostaje poinstruowany w prompcie o obecności szumu, dzięki czemu uwzględnia go podczas wnioskowania parametrycznego.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Dynamiczne przełączanie strategii}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Monitorowanie dryfu w czasie rzeczywistym}\\[4pt]
+Zamiast statycznego wyboru, proponujemy wprowadzenie mechanizmu \textbf{ciągłej weryfikacji dryfu (Online Drift Monitoring)}.\\[6pt]
+W regularnych odstępach czasu (np. co 10 rund), system przeprowadza szybkie, jednorundowe testy JSD na aktualizacjach wag.
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Aktywna adaptacja}
+Jeśli system wykryje nagły wzrost skośności rozkładów u klientów, automatycznie wywoła lekki prompt LLM, który „w locie” przełącza strategię agregacji z FedAvg na FedProx, dbając o nieprzerwaną i optymalną zbieżność uczenia w zmieniających się warunkach.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Metoda Zero-Shot Transfer}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Przenoszenie wiedzy między domenami}\\[4pt]
+Wykorzystanie zaawansowanych modeli LLM otwiera drzwi do transferu wiedzy optymalizacyjnej pomiędzy skrajnie różnymi wdrożeniami.\\[6pt]
+Proponujemy budowę \textbf{globalnej bazy wiedzy o konfiguracjach}, gdzie LLM uczy się na bazie historycznych wdrożeń z innych dziedzin (np. medycyny, telekomunikacji).
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Inteligentny start bez EDA}
+Dzięki technice transferu Zero-Shot, dla nowo uruchamianego klastra IoT o znanej specyfikacji geograficznej, model językowy potrafi natychmiast przepisać optymalną konfigurację bez potrzeby uruchamiania kosztownych czasowo i sieciowo faz diagnostycznych PCA, oszczędzając zasoby od pierwszej sekundy wdrożenia.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+{\setbeamertemplate{footline}{}
+\begin{frame}{Samonadzorowane dopasowanie cech}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Zwalczanie Feature Skew u źródła}\\[4pt]
+Ostatnim, najbardziej zaawansowanym pomysłem jest wdrożenie metod \textbf{uczenia samonadzorowanego (Self-Supervised Learning -- SSL)} w celu dopasowania reprezentacji przed agregacją.\\[6pt]
+Klienci, przed przystąpieniem do uczenia właściwego, wspólnie uczą lekki koder cech za pomocą kontrastowych metod reprezentacji (Contrastive Learning).
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{infoboxgreen}{Całkowita eliminacja skośności}
+Contrastive Alignment wymusza na sieci reprezentowanie zbliżonych semantycznie obiektów w tym samym obszarze przestrzeni ukrytej, niezależnie od oświetlenia czy aparatu. Pozwala to na całkowitą eliminację zjawiska Feature Skew u źródła, czyniąc agregację odporną i stabilną.
+\end{infoboxgreen}
+\end{column}
+\end{columns}
+\end{frame}
+}
+
+% ============================================================
+{\setbeamertemplate{footline}{}
+\begin{frame}{Image Sources}
+\footnotesize
+\begin{itemize}
+\item \texttt{https://media.geeksforgeeks.org/wp-content/uploads/20230717153929/Federated-Learning-(1).png}\\ Source: \texttt{www.geeksforgeeks.org}
+\vspace{4pt}
+\item \texttt{https://www.mdpi.com/jsan/jsan-14-00037/article\_deploy/html/images/jsan-14-00037-g004.png}\\ Source: \texttt{www.mdpi.com}
+\vspace{4pt}
+\item \texttt{https://www.frontiersin.org/files/Articles/1606499/xml-images/fimmu-16-1606499-g005.webp}\\ Source: \texttt{www.frontiersin.org}
+\end{itemize}
+\end{frame}
+}
+
+\end{document}

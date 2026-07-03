@@ -1,0 +1,5 @@
+\babel@toc {polish}{}\relax 
+\beamer@sectionintoc {1}{Przegląd literatury powiązanej}{2}{0}{1}
+\beamer@sectionintoc {2}{Prezentacja artykułu badawczego}{17}{0}{2}
+\beamer@sectionintoc {3}{Krytyka artykułu naukowego}{46}{0}{3}
+\beamer@sectionintoc {4}{Autorskie propozycje rozwoju (Nowe pomysły)}{56}{0}{4}
