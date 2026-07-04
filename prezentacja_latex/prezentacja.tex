@@ -1,14 +1,13 @@
 \documentclass[9pt,aspectratio=169]{beamer}
 
-\usepackage[polish]{babel}
+\usepackage[polish,provide=*]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
 \usepackage{tcolorbox}
-% table option enables \rowcolor for tables
-\usepackage[table]{xcolor}
 \usepackage{booktabs}
 \usepackage{array}
+\usepackage{colortbl}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta}
 \tcbuselibrary{skins}
@@ -206,39 +205,33 @@ Uśrednienie tak rozbieżnych modeli w FedAvg drastycznie obniża ostateczną do
 \end{frame}
 
 % ============================================================
-\begin{frame}{Przegląd literatury: Algorytm SCAFFOLD}
+\begin{frame}{Przegląd literatury: Empiryczny wpływ heterogeniczności (Zhao et al.)}
 \begin{columns}[T]
 \begin{column}{0.5\textwidth}
-\textbf{Zastosowanie zmiennych kontrolnych}\\[4pt]
-Karimireddy et al. (2020) zaproponowali algorytm \textbf{SCAFFOLD} (Stochastic Controlled Averaging for Federated Learning).\\[6pt]
-Wprowadza on tzw. \textbf{zmienne kontrolne (control variates)}, które estymują kierunek dryfu dla każdego klienta i korygują lokalne kroki gradientowe.
-\[
-g = \nabla F_i(y) - c_i + c
-\]
+\textbf{Ilościowy dowód degradacji FedAvg}\\[4pt]
+Zhao et al. (2018) empirycznie wykazali negatywny wpływ heterogeniczności danych na FedAvg, demonstrując wyraźny spadek dokładności w warunkach non-IID.\\[6pt]
+Rozmiar tej różnicy w wydajności powiększa się w miarę wzrostu stopnia heterogeniczności danych klientów.
 \end{column}
 \begin{column}{0.5\textwidth}
-\begin{infoboxgreen}{Zalety i wady SCAFFOLD}
-\textbf{Zalety:} Teoretycznie odporny na dowolny poziom heterogeniczności danych; gwarantuje szybszą zbieżność.\\[4pt]
-\textbf{Wady:} Wymaga podwojenia kosztów komunikacyjnych (przesyłanie dodatkowych wektorów stanu zmiennych kontrolnych) oraz zwiększa zużycie pamięci klientów.
+\begin{infoboxgreen}{Wniosek komunikacyjny}
+Analizy teoretyczne ugruntowały fakt, że heterogeniczność danych zwiększa liczbę rund komunikacyjnych potrzebnych do osiągnięcia założonej dokładności, dodatkowo pogłębiając wąskie gardło komunikacyjne w FL.
 \end{infoboxgreen}
 \end{column}
 \end{columns}
 \end{frame}
 
 % ============================================================
-\begin{frame}{Przegląd literatury: Algorytm FedProx}
+\begin{frame}{Przegląd literatury: Mapowania empiryczne (Li et al.)}
 \begin{columns}[T]
 \begin{column}{0.5\textwidth}
-\textbf{Człon proksymalny w optymalizacji}\\[4pt]
-Zaproponowany przez Li et al. (2020), \textbf{FedProx} rozwiązuje problem dryfu poprzez dodanie do lokalnej funkcji kosztu kary kwadratowej za zbytnie oddalenie się od modelu globalnego:
-\[
-\min_{w} h_k(w) = F_k(w) + \frac{\mu}{2}\lVert w - w_t \rVert^2
-\]
+\textbf{Odwzorowania heterogeniczność--strategia}\\[4pt]
+Li et al. symulują zróżnicowane warunki non-IID i oceniają strategie agregacji w tych warunkach, tworząc empiryczne mapowania między poziomem heterogeniczności a wydajnością strategii.\\[6pt]
+Podobne podejście empiryczne zaprezentował Dubey (2025), który skwantyfikował heterogeniczność jako metrykę i rekomendował strategie sprawdzone w porównywalnych warunkach.
 \end{column}
 \begin{column}{0.5\textwidth}
-\begin{infobox}{Znaczenie hiperparametru $\mu$}
-Współczynnik $\mu$ kontroluje siłę powiązania modelu lokalnego z globalnym. Służy jako mechanizm regulacji odporności systemu na skośność danych.\\[6pt]
-\textbf{Problem:} Ręczny wybór optymalnego $\mu$ jest niezwykle trudny i wymaga kosztownych prób, co motywuje potrzebę automatyzacji opisaną w badanym artykule.
+\begin{infobox}{Kluczowe ograniczenie}
+Większość tych prac zwraca \textbf{tylko nazwy strategii}, bez strojenia ich parametrów (np. $\mu$ w FedProx czy $f$ w Krum), mimo że parametry te mają istotny wpływ na wydajność.\\[6pt]
+Sztywne tabele mapowań nie adaptują się do nowych algorytmów agregacji i mogą nie generalizować się na zbiory danych o odmiennej charakterystyce.
 \end{infobox}
 \end{column}
 \end{columns}
@@ -409,15 +402,17 @@ Podobnie jak u Maweli, badania te skupiały się na orkiestracji infrastruktury 
 % ============================================================
 \begin{frame}{Przegląd literatury: Tabela porównawcza}
 \centering\scriptsize
-\renewcommand{\arraystretch}{1.4}
-\begin{tabular}{p{2.3cm}p{1.9cm}p{2.1cm}p{1.7cm}p{1.9cm}p{2.0cm}}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{p{2.1cm}p{1.75cm}p{1.95cm}p{1.55cm}p{1.75cm}p{1.85cm}}
 \toprule
 \textbf{Praca naukowa} & \textbf{Detekcja het.} & \textbf{Wybór strategii} & \textbf{Strojenie param.} & \textbf{Automatyzacja LLM} & \textbf{Świadomość budżetu}\\
 \midrule
 Li et al. (2021) & Nie & Tak (Sztywne reguły) & Nie & Nie & Nie\\
 Dubey (2025) & Tak & Tak (Sztywne reguły) & Nie & Nie & Nie\\
 Fed-Hetero (2025) & Tak (Lekka) & Nie & Nie & Nie & Nie\\
-Mawela / Shen (2025) & Nie & Nie & Nie & Tak (Rusztowanie) & Nie\\
+Mawela et al. (2025) & Nie & Nie & Nie & Tak & Nie\\
+Shen et al. (2023) & Nie & Nie & Nie & Tak & Nie\\
 \rowcolor{lightgray}\textbf{Zaproponowane rozw.} & \textbf{Tak (Rozproszone PCA/JSD)} & \textbf{Tak (Adaptacyjny wybór)} & \textbf{Tak (Optymalizacja GA)} & \textbf{Tak (One-Shot reasoning)} & \textbf{Tak (1-tryb / 8-trybów)}\\
 \bottomrule
 \end{tabular}
@@ -612,8 +607,8 @@ Rola modelu językowego polega na przetłumaczeniu tych abstrakcyjnych deskrypto
 \begin{column}{0.5\textwidth}
 \begin{infobox}{Kluczowe innowacje promptu}
 \begin{itemize}\footnotesize
-\item \textbf{Wbudowana fl\_schema:} Model otrzymuje dokładną listę dozwolonych strategii i przedziałów liczbowych parametrów, eliminując błędy składniowe.
-\item \textbf{Few-Shot Prompting:} Umieszczenie konkretnych przykładów poprawnego kodu JSON w instrukcji systemowej zwiększyło stabilność generowania z 40\% do 100\%.
+\item \textbf{Wbudowana fl\_schema:} Model otrzymuje dokładną listę dozwolonych strategii i przedziałów liczbowych parametrów, co zwiększyło poprawność wyjścia z 2 na 5 do 5 na 5 przypadków testowych.
+\item \textbf{Few-Shot Prompting:} Umieszczenie konkretnych przykładów poprawnego kodu JSON w instrukcji systemowej; bez niego błędy występowały w 2 z 5 przypadków testowych.
 \end{itemize}
 \end{infobox}
 \end{column}
@@ -663,7 +658,7 @@ Wprowadzono autonomiczny \textbf{parser składniowy} sprawdzający zgodność wy
 \begin{infoboxgreen}{Pętla korekcyjna (do 3 prób)}
 \textbf{Krok 1:} Odczyt odpowiedzi i weryfikacja typów danych (np. czy \texttt{proximal\_mu} jest float).\\[3pt]
 \textbf{Krok 2:} W przypadku błędu, system wysyła prompt zwrotny z precyzyjnym wskazaniem linii błędu kompilatora.\\[3pt]
-\textbf{Krok 3:} Przy braku poprawy po 3 próbach, system bezpiecznie uruchamia domyślny, stabilny algorytm FedAvg.
+\textbf{Krok 3:} Przy braku poprawy po 3 próbach, system zgłasza błąd informacyjny (nie uruchamia automatycznie żadnej domyślnej strategii).
 \end{infoboxgreen}
 \end{column}
 \end{columns}
@@ -781,8 +776,10 @@ Na bazie zbioru NASA Bearing stworzono sześć unikalnych scenariuszy badawczych
 \begin{enumerate}\footnotesize
 \item Standardowy rozkład IID (baza porównawcza).
 \item Label Skew (klienci posiadają inne proporcje klas).
+\item Feature Skew (przesunięcie rozkładu cech przez szum Gaussa).
 \item Noisy Labels (część etykiet losowo zaburzona).
 \item Label Poisoning (pełne odwrócenie klas u jednego klienta).
+\item Corrupted Client (połączenie szumu cech i zatrucia etykiet).
 \end{enumerate}
 \end{infoboxgreen}
 \end{column}
@@ -792,26 +789,33 @@ Na bazie zbioru NASA Bearing stworzono sześć unikalnych scenariuszy badawczych
 % ============================================================
 \begin{frame}{Dodatkowe domeny walidacyjne}
 \begin{columns}[T]
-\begin{column}{0.32\textwidth}
-\begin{cardpurple}
-\textbf{Retina Dataset}\\[4pt]
-\footnotesize \textbf{Wizyjny (Medyczny).}\\[3pt]
-Rzeczywista (niesymulowana) heterogeniczność wynikająca z różnic sprzętowych i demograficznych w szpitalach klinicznych podczas diagnostyki jaskry.
+\begin{column}{0.24\textwidth}
+\begin{cardpurple}[height=4.3cm]
+\textbf{\footnotesize Wine Quality}\\[3pt]
+\tiny \textbf{Tabularyczny (wieloklasowy).}\\[2pt]
+Ocena jakości wina (skala 1--10) na podstawie cech fizykochemicznych. Rozszerza ewaluację danych tabularycznych o zadanie wieloklasowe.
 \end{cardpurple}
 \end{column}
-\begin{column}{0.32\textwidth}
-\begin{cardgreen}
-\textbf{Sentiment140}\\[4pt]
-\footnotesize \textbf{Tekstowy (NLP).}\\[3pt]
-Analiza sentymentu wpisów na portalu Twitter. Testuje odporność systemu na wysoką wymiarowość osadzeń językowych (embeddings).
+\begin{column}{0.24\textwidth}
+\begin{cardgreen}[height=4.3cm]
+\textbf{\footnotesize Retina Dataset}\\[3pt]
+\tiny \textbf{Wizyjny (Medyczny).}\\[2pt]
+Rzeczywista (niesymulowana) heterogeniczność wynikająca z różnic sprzętowych i demograficznych w szpitalach klinicznych podczas diagnostyki jaskry.
 \end{cardgreen}
 \end{column}
-\begin{column}{0.32\textwidth}
-\begin{cardorange}
-\textbf{CartPole (OpenGym)}\\[4pt]
-\footnotesize \textbf{Uczenie przez wzmacnianie.}\\[3pt]
-Federated Reinforcement Learning (FRL). Zadanie kontroli fizycznej pod wpływem drastycznie różnych parametrów grawitacji u klientów.
+\begin{column}{0.24\textwidth}
+\begin{cardorange}[height=4.3cm]
+\textbf{\footnotesize Sentiment140}\\[3pt]
+\tiny \textbf{Tekstowy (NLP).}\\[2pt]
+Analiza sentymentu wpisów na portalu Twitter. Testuje odporność systemu na wysoką wymiarowość osadzeń językowych (embeddings).
 \end{cardorange}
+\end{column}
+\begin{column}{0.24\textwidth}
+\begin{cardpurple}[height=4.3cm]
+\textbf{\footnotesize CartPole (OpenGym)}\\[3pt]
+\tiny \textbf{Uczenie przez wzmacnianie.}\\[2pt]
+Federated Reinforcement Learning (FRL). Zadanie kontroli fizycznej pod wpływem drastycznie różnych parametrów grawitacji u klientów.
+\end{cardpurple}
 \end{column}
 \end{columns}
 \end{frame}
@@ -843,22 +847,22 @@ Wykrywanie Feature Skew za pomocą rozproszonego PCA dało wyraźny rozdział od
 % ============================================================
 \begin{frame}{Wyniki dokładności: NASA Bearing}
 \centering\scriptsize
-\renewcommand{\arraystretch}{1.4}
-\begin{tabular}{lcccc}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{lccccc}
 \toprule
-\textbf{Scenariusz zaburzenia} & \textbf{Optymalny HPO} & \textbf{GA (proponowane)} & \textbf{Single-Shot LLM} & \textbf{Standardowy FedAvg}\\
+\textbf{Scenariusz} & \textbf{Empirical Best} & \textbf{GA (proponowane)} & \textbf{Single-Shot LLM} & \textbf{FedAvg} & \textbf{Empirical Worst}\\
 \midrule
-Label Skew     & $0.6729\pm0.014$ & $0.6679\pm0.012$ & $0.6360\pm0.005$ & $0.6186\pm0.016$\\
-Label Poisoning& $0.6060\pm0.016$ & $0.6223\pm0.019$ & $0.6087\pm0.018$ & $0.5543\pm0.025$\\
-Noisy Label    & $0.6948\pm0.018$ & $0.6882\pm0.023$ & $0.6548\pm0.041$ & $0.6393\pm0.050$\\
-Feature Skew   & $0.7250\pm0.013$ & $0.7112\pm0.044$ & $0.7022\pm0.024$ & $0.6806\pm0.034$\\
+Label Skew      & $0.6729\pm0.0149$ & \cellcolor{lightgray}$0.6679\pm0.0128$ & $0.6360\pm0.0058$ & $0.6186\pm0.0168$ & $0.6236\pm0.0205$\\
+Label Poisoning & $0.6060\pm0.0168$ & \cellcolor{lightgray}$0.6223\pm0.0195$ & $0.6087\pm0.0180$ & $0.5543\pm0.0258$ & $0.5543\pm0.0258$\\
+Noisy Label     & $0.6948\pm0.0187$ & \cellcolor{lightgray}$0.6882\pm0.0233$ & $0.6548\pm0.0410$ & $0.6393\pm0.0500$ & $0.6434\pm0.0471$\\
+Feature Skew    & $0.7250\pm0.0139$ & \cellcolor{lightgray}$0.7112\pm0.0449$ & $0.7022\pm0.0241$ & $0.6806\pm0.0347$ & $0.6681\pm0.0429$\\
+Corrupted Client& $0.6058\pm0.0258$ & \cellcolor{lightgray}$0.6120\pm0.0198$ & $0.6265\pm0.0219$ & $0.5948\pm0.0197$ & $0.5838\pm0.0230$\\
 \bottomrule
 \end{tabular}
 \end{frame}
 
 % ============================================================
 \begin{frame}{Analiza: Single-Shot LLM vs FedAvg}
-\sloppy
 \begin{columns}[T]
 \begin{column}{0.5\textwidth}
 \textbf{Bezpieczny wzrost bez dodatkowych kosztów}\\[4pt]
@@ -866,8 +870,8 @@ Nawet w skrajnie ograniczonym budżecie \textbf{Single-Trial} (gdzie dozwolona j
 Największa przewaga widoczna jest w środowisku wrogim (Label Poisoning), gdzie FedAvg załamuje się do dokładności $55.43\%$, podczas gdy LLM natychmiast sugeruje algorytm Krum, podbijając dokładność do $60.87\%$.
 \end{column}
 \begin{column}{0.5\textwidth}
-\begin{infoboxgreen}{Zysk zerokosztowy}
-Wybór dokonany przez model GPT-4.1 na podstawie binarnego promptu diagnostycznego nie generuje żadnego dodatkowego narzutu czasowego na urządzenia klienckie podczas właściwego treningu, stanowiąc darmowe ulepszenie systemowe.
+\begin{infoboxgreen}{Marginalny koszt narzutu}
+Wybór dokonany przez model GPT-4.1 nie generuje dodatkowego narzutu podczas właściwego treningu klientów. Cały potok jednorazowej automatyzacji LLM (detekcja + wnioskowanie) kosztuje ok. 109s wobec 69s dla samego naiwnego treningu FL -- to wciąż znacznie mniej niż 50-próbowe HPO w Optunie (1106s).
 \end{infoboxgreen}
 \end{column}
 \end{columns}
@@ -983,10 +987,14 @@ Znakomita większość prac z zakresu automatyzacji FL ogranicza się wyłączni
 \end{itemize}
 \end{column}
 \begin{column}{0.5\textwidth}
+{\footnotesize
 \begin{infoboxgreen}{Dostosowanie metryk dla FRL}
-W uczeniu przez wzmacnianie standardowa dokładność ważona nie istnieje.\\[6pt]
-Autorzy wykazali się elastycznością metodologiczną, zastępując dokładność ważoną \textbf{medianą średniej nagrody (reward)} z ostatnich rund treningowych, co pozwoliło na stabilną optymalizację agentów DQN.
+W uczeniu przez wzmacnianie standardowa dokładność ważona nie istnieje. Autorzy zastąpili ją \textbf{medianą średniej nagrody (reward)} z ostatnich rund treningowych, co pozwoliło na stabilną optymalizację agentów DQN.
 \end{infoboxgreen}
+\vspace{2pt}
+\begin{infoboxorange}{Ważny limit: TinyBERT}
+Przy embeddingach TinyBERT (Sentiment140) wszystkie triale Optuny dały identyczne krzywe uczenia -- silne pretrenowane reprezentacje zniwelowały różnice między klientami, czyniąc wybór strategii agregacji bez znaczenia.
+\end{infoboxorange}}
 \end{column}
 \end{columns}
 \end{frame}
@@ -1158,16 +1166,16 @@ Wystarczy jakakolwiek zmiana w strukturze odpowiedzi API OpenAI lub drobna modyf
 \end{frame}
 
 % ============================================================
-\begin{frame}{Krytyka: Uproszczona ewaluacja}
+\begin{frame}{Krytyka: Ograniczona rola strategii przy silnych reprezentacjach}
 \begin{columns}[T]
 \begin{column}{0.5\textwidth}
-\textbf{Stosowanie uproszczonych modeli}\\[4pt]
-Eksperymenty zostały przeprowadzone przy użyciu relatywnie małych, prostych modeli uczenia maszynowego (np. płytkie sieci MLP dla NASA Bearing czy proste architektury CNN dla CIFAR-10).\\[6pt]
-Współczesny przemysł opiera się natomiast na potężnych modelach (np. sieciach Transformer o miliardach parametrów).
+\textbf{Wynik testu z TinyBERT jako sygnał ostrzegawczy}\\[4pt]
+Autorzy sami przetestowali architekturę typu Transformer (TinyBERT na Sentiment140) i wykazali, że przy silnych, pretrenowanych reprezentacjach wybór strategii agregacji przestaje mieć znaczenie -- wszystkie triale dały identyczne krzywe uczenia.\\[6pt]
+Oznacza to, że korzyści z frameworku są \textbf{odwrotnie proporcjonalne} do jakości reprezentacji cech lokalnego modelu.
 \end{column}
 \begin{column}{0.5\textwidth}
-\begin{infoboxorange}{Brak dowodów skalowalności modelu}
-Dla modeli o ogromnej pojemności pamięciowej zjawiska dryfu klienta i przeuczenia lokalnego zachodzą w zupełnie innej dynamice matematycznej. Brak rygorystycznej walidacji na modelach typu Transformer uniemożliwia bezwarunkowe potwierdzenie skuteczności frameworku w nowoczesnych systemach generatywnych.
+\begin{infoboxorange}{Realna implikacja}
+Dla najbardziej praktycznie istotnych, dużych modeli (LLM, duże Transformery z bogatymi embeddingami), potencjalna wartość dodana automatycznego doboru strategii może okazać się marginalna -- co ogranicza praktyczne zastosowanie frameworku właśnie w tych scenariuszach, gdzie FL jest dziś najbardziej pożądane.
 \end{infoboxorange}
 \end{column}
 \end{columns}
